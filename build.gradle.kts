@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     kotlin("jvm") version "1.7.10"
     id("org.jetbrains.dokka") version Versions.KOTLIN
@@ -12,7 +10,7 @@ subprojects {
 }
 
 group = "io.github.highright1234"
-version = "0.0.1"
+version = "0.0.2"
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
