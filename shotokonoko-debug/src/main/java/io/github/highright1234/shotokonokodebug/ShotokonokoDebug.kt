@@ -1,9 +1,7 @@
 package io.github.highright1234.shotokonokodebug
 
 import com.github.shynixn.mccoroutine.bukkit.SuspendingJavaPlugin
-import com.github.shynixn.mccoroutine.bukkit.asyncDispatcher
 import com.github.shynixn.mccoroutine.bukkit.launch
-import io.github.highright1234.shotokonoko.Shotokonoko
 import io.github.highright1234.shotokonoko.Shotokonoko.plugin
 import io.github.highright1234.shotokonoko.listener.ChatScanner
 import io.github.highright1234.shotokonoko.listener.listen
