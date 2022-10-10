@@ -4,7 +4,9 @@ import com.github.shynixn.mccoroutine.bukkit.asyncDispatcher
 import com.github.shynixn.mccoroutine.bukkit.launch
 import com.github.shynixn.mccoroutine.bukkit.minecraftDispatcher
 import io.github.highright1234.shotokonoko.Shotokonoko.plugin
-import kotlinx.coroutines.*
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.yield
 import org.bukkit.Bukkit
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.coroutineContext

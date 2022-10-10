@@ -27,7 +27,7 @@ object ListeningUtil {
         val listener = object: Listener {  }
         val completableDeferred = CompletableDeferred<Result<T>>()
         plugin.server.pluginManager.registerEvent(clazz, listener, priority, { _, event ->
-            if (!ignoreCancelled || (event is Cancellable && !event.isCancelled)) {
+            if (!ignoreCancelled || event !is Cancellable|| !event.isCancelled) {
                 @Suppress("UNCHECKED_CAST")
                 if (filter(event as T) && event.safePlayer == player) {
                     completableDeferred.complete(Result.success(event))
@@ -52,7 +52,7 @@ object ListeningUtil {
     }
 
     // 플레이어 데스 이벤트같은거는 EntityEvent 임
-    private val Event.safePlayer: Player
+    private val Event.safePlayer: Player?
         get() {
             if (this is PlayerEvent) return this.player
             if (this is EntityEvent && this.entity is Player) return this.entity as Player
@@ -60,8 +60,8 @@ object ListeningUtil {
             if (this is EntityDamageByEntityEvent && this.damager is Player) return this.damager as Player
             @Suppress("UNCHECKED_CAST")
             val getter = this::class.memberProperties
-                .first { it.name == "player" } as KProperty1<Event, Player>
-            return getter.get(this)
+                .find { it.name == "player" } as KProperty1<Event, Player>?
+            return getter?.get(this)
         }
 
     suspend fun <T: Event> listener(

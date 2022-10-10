@@ -4,6 +4,8 @@ import com.github.shynixn.mccoroutine.bukkit.SuspendingJavaPlugin
 import com.github.shynixn.mccoroutine.bukkit.launch
 import io.github.highright1234.shotokonoko.Shotokonoko.plugin
 import io.github.highright1234.shotokonoko.listener.ChatScanner
+import io.github.highright1234.shotokonoko.listener.exception.PlayerQuitException
+import io.github.highright1234.shotokonoko.listener.exception.TimedOutException
 import io.github.highright1234.shotokonoko.listener.listen
 import io.github.highright1234.shotokonoko.plus
 import io.github.highright1234.shotokonoko.withTimeOut
@@ -28,7 +30,12 @@ class ShotokonokoDebug: SuspendingJavaPlugin() {
             chatResult.onSuccess {
                 event.player.sendMessage(it + "라고 보냈구만")
             }.onFailure {
-                logger.info("플레이어 쉐키가 나감")
+                val message = when (it) {
+                    is PlayerQuitException -> "플레이어 쉐키가 나감"
+                    is TimedOutException -> "1분 지났다"
+                    else -> "버근가"
+                }
+                event.player.sendMessage(message)
             }
         }
     }
