@@ -60,6 +60,7 @@ object ListeningUtil {
             if (this is EntityEvent && this.entity is Player) return this.entity as Player
             // 데미지 받은놈은 위에서 처리함
             if (this is EntityDamageByEntityEvent && this.damager is Player) return this.damager as Player
+            if (this is ProjectileHitEvent && this.entity.shooter is Player) return this.entity.shooter as Player
             @Suppress("UNCHECKED_CAST")
             val getter = this::class.memberProperties
                 .find { it.name == "player" } as KProperty1<Event, Player>?
