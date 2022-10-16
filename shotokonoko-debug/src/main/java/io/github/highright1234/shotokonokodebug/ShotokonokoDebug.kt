@@ -11,6 +11,9 @@ import io.github.highright1234.shotokonoko.listener.exception.PlayerQuitExceptio
 import io.github.highright1234.shotokonoko.listener.exception.TimedOutException
 import io.github.highright1234.shotokonoko.listener.listen
 import io.github.highright1234.shotokonoko.plus
+import io.github.highright1234.shotokonoko.storage.getDataStore
+import io.github.highright1234.shotokonoko.storage.getValue
+import io.github.monun.kommand.getValue
 import io.github.monun.kommand.kommand
 import kotlinx.coroutines.delay
 import net.kyori.adventure.text.Component
@@ -21,6 +24,59 @@ class ShotokonokoDebug: SuspendingJavaPlugin() {
         Shotokonoko.register(this)
         kommand {
             TestKommand.register(this)
+            register("set") {
+                requires { isPlayer }
+
+                then("key" to string()) {
+                    then("value" to int()) {
+                        executes { ctx ->
+                            val key: String by ctx
+                            val value: Int by ctx
+                            val store = getDataStore(player.uniqueId.toString())
+                            store.set(key, value)
+                        }
+                    }
+                }
+            }
+            register("inc") {
+                requires { isPlayer }
+
+                then("key" to string()) {
+                    executes { ctx ->
+                        val key: String by ctx
+                        val store = getDataStore(player.uniqueId.toString())
+                        store.increment(key, 1)
+                    }
+                }
+            }
+            register("get") {
+                requires { isPlayer }
+
+                then("key" to string()) {
+                    executes { ctx ->
+                        val key: String by ctx
+                        val store = getDataStore(player.uniqueId.toString())
+                        player.sendMessage("${store.get(key, Int::class.java)}")
+                    }
+                }
+            }
+            register("getBy") {
+                requires { isPlayer }
+
+                executes { ctx ->
+                    val store = getDataStore(player.uniqueId.toString())
+                    val test: Int? by store
+                    player.sendMessage("$test")
+                }
+            }
+            register("save") {
+                requires { isPlayer }
+
+                executes { ctx ->
+                    val store = getDataStore(player.uniqueId.toString())
+                    store.save()
+                }
+            }
         }
         launchPlayerGCChecker()
         launchPsycho()

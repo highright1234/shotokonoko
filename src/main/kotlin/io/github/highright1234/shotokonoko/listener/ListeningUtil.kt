@@ -14,6 +14,7 @@ import org.bukkit.event.entity.EntityEvent
 import org.bukkit.event.entity.ProjectileHitEvent
 import org.bukkit.event.player.PlayerEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import kotlin.coroutines.suspendCoroutine
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
