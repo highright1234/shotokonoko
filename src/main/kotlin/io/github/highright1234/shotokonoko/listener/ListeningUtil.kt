@@ -5,6 +5,7 @@ import io.github.highright1234.shotokonoko.Shotokonoko.plugin
 import io.github.highright1234.shotokonoko.listener.exception.PlayerQuitException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
 import org.bukkit.entity.Player
 import org.bukkit.event.*
@@ -12,6 +13,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityEvent
 import org.bukkit.event.player.PlayerEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import kotlin.coroutines.suspendCoroutine
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
@@ -89,15 +91,17 @@ object ListeningUtil {
         ignoreCancelled: Boolean = false,
     ): Flow<T> {
         val listener = object: Listener {  }
-        return flow {
-            plugin.server.pluginManager.registerEvent(clazz, listener, priority, { _, event ->
-                if (!ignoreCancelled || (event is Cancellable && !event.isCancelled)) {
-                    plugin.launch {
-                        @Suppress("UNCHECKED_CAST")
-                        emit(event as T)
+        return channelFlow {
+            suspendCoroutine {
+                plugin.server.pluginManager.registerEvent(clazz, listener, priority, { _, event ->
+                    if (!ignoreCancelled || (event is Cancellable && !event.isCancelled)) {
+                        plugin.launch {
+                            @Suppress("UNCHECKED_CAST")
+                            send(event as T)
+                        }
                     }
-                }
-            }, plugin)
+                }, plugin)
+            }
         }
     }
 }
