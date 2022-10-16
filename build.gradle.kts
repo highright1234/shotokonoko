@@ -10,7 +10,7 @@ subprojects {
 }
 
 group = "io.github.highright1234"
-version = "0.0.3"
+version = "0.0.4"
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")

@@ -1,4 +1,4 @@
-package io.github.highright1234.shotokonoko
+package io.github.highright1234.shotokonoko.coroutine
 
 import com.github.shynixn.mccoroutine.bukkit.asyncDispatcher
 import com.github.shynixn.mccoroutine.bukkit.launch
@@ -12,6 +12,13 @@ import org.bukkit.Bukkit
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
+suspend fun withSafeTimeout(timeMillis: Long, whenTimedOut: suspend () -> Unit) =
+    TimeoutData.newTimeoutData(
+        timeMillis,
+        whenTimedOut
+    )
+
+@Deprecated("use withSmartTimeout", ReplaceWith("withSafeTimeout(delayTime, whenTimedOut)"))
 suspend fun withTimeOut(delayTime: Long, whenTimedOut: suspend () -> Unit) =
     TimeoutData.newTimeoutData(
         delayTime,

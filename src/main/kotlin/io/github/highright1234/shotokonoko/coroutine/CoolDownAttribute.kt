@@ -1,4 +1,4 @@
-package io.github.highright1234.shotokonoko
+package io.github.highright1234.shotokonoko.coroutine
 
 import com.github.shynixn.mccoroutine.bukkit.asyncDispatcher
 import com.github.shynixn.mccoroutine.bukkit.launch

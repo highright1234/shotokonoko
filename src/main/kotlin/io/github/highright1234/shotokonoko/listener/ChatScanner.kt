@@ -2,8 +2,8 @@ package io.github.highright1234.shotokonoko.listener
 
 import com.github.shynixn.mccoroutine.bukkit.asyncDispatcher
 import io.github.highright1234.shotokonoko.Shotokonoko.plugin
+import io.github.highright1234.shotokonoko.coroutine.withSafeTimeout
 import io.github.highright1234.shotokonoko.listener.exception.TimedOutException
-import io.github.highright1234.shotokonoko.withTimeOut
 import io.papermc.paper.event.player.AsyncChatEvent
 import kotlinx.coroutines.withContext
 import net.kyori.adventure.text.Component
@@ -13,7 +13,7 @@ class ChatScanner(private val player: Player, private val timeOut: Long = 60000L
     suspend fun await() : Result<Component> {
         var result: Result<Component>
         withContext(plugin.asyncDispatcher) {
-            withTimeOut(timeOut) { result = Result.failure(TimedOutException()) }
+            withSafeTimeout(timeOut) { result = Result.failure(TimedOutException()) }
             result = player.listen<AsyncChatEvent>().onSuccess { it.isCancelled = true }.map { it.message() }
         }
         return result

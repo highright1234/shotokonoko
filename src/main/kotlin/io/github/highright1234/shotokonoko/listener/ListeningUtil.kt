@@ -4,13 +4,14 @@ import com.github.shynixn.mccoroutine.bukkit.launch
 import io.github.highright1234.shotokonoko.Shotokonoko.plugin
 import io.github.highright1234.shotokonoko.listener.exception.PlayerQuitException
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import org.bukkit.entity.Player
 import org.bukkit.event.*
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityEvent
+import org.bukkit.event.entity.ProjectileHitEvent
 import org.bukkit.event.player.PlayerEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import kotlin.coroutines.suspendCoroutine
@@ -60,6 +61,7 @@ object ListeningUtil {
             if (this is EntityEvent && this.entity is Player) return this.entity as Player
             // 데미지 받은놈은 위에서 처리함
             if (this is EntityDamageByEntityEvent && this.damager is Player) return this.damager as Player
+            if (this is ProjectileHitEvent && this.entity.shooter is Player) return this.entity.shooter as Player
             @Suppress("UNCHECKED_CAST")
             val getter = this::class.memberProperties
                 .find { it.name == "player" } as KProperty1<Event, Player>?
@@ -89,20 +91,18 @@ object ListeningUtil {
         clazz: Class<T>,
         priority: EventPriority = EventPriority.NORMAL,
         ignoreCancelled: Boolean = false,
-    ): Flow<T> {
+    ): SharedFlow<T> {
         val listener = object: Listener {  }
-        return channelFlow {
-            suspendCoroutine {
-                plugin.server.pluginManager.registerEvent(clazz, listener, priority, { _, event ->
-                    if (!ignoreCancelled || (event is Cancellable && !event.isCancelled)) {
-                        plugin.launch {
-                            @Suppress("UNCHECKED_CAST")
-                            send(event as T)
-                        }
-                    }
-                }, plugin)
+        val flow = MutableSharedFlow<T>()
+        plugin.server.pluginManager.registerEvent(clazz, listener, priority, { _, event ->
+            if (!ignoreCancelled || (event is Cancellable && !event.isCancelled)) {
+                plugin.launch {
+                    @Suppress("UNCHECKED_CAST")
+                    flow.emit(event as T)
+                }
             }
-        }
+        }, plugin)
+        return flow.asSharedFlow()
     }
 }
 
