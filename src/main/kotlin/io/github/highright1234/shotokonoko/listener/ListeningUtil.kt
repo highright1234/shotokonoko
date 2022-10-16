@@ -4,12 +4,14 @@ import com.github.shynixn.mccoroutine.bukkit.launch
 import io.github.highright1234.shotokonoko.Shotokonoko.plugin
 import io.github.highright1234.shotokonoko.listener.exception.PlayerQuitException
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import org.bukkit.entity.Player
 import org.bukkit.event.*
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityEvent
+import org.bukkit.event.entity.ProjectileHitEvent
 import org.bukkit.event.player.PlayerEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import kotlin.reflect.KProperty1
@@ -87,18 +89,18 @@ object ListeningUtil {
         clazz: Class<T>,
         priority: EventPriority = EventPriority.NORMAL,
         ignoreCancelled: Boolean = false,
-    ): Flow<T> {
+    ): SharedFlow<T> {
         val listener = object: Listener {  }
-        return flow {
-            plugin.server.pluginManager.registerEvent(clazz, listener, priority, { _, event ->
-                if (!ignoreCancelled || (event is Cancellable && !event.isCancelled)) {
-                    plugin.launch {
-                        @Suppress("UNCHECKED_CAST")
-                        emit(event as T)
-                    }
+        val flow = MutableSharedFlow<T>()
+        plugin.server.pluginManager.registerEvent(clazz, listener, priority, { _, event ->
+            if (!ignoreCancelled || (event is Cancellable && !event.isCancelled)) {
+                plugin.launch {
+                    @Suppress("UNCHECKED_CAST")
+                    flow.emit(event as T)
                 }
-            }, plugin)
-        }
+            }
+        }, plugin)
+        return flow.asSharedFlow()
     }
 }
 
