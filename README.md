@@ -15,6 +15,11 @@
 - 코틀린을 위한 리스닝 최적화
 - 플레이어 데이터 자동제거 collection
 
+TODO:
+- storage 업그레이드
+- MutableDelay 최적화
+- CoolDownAttribute를 MutableDelay로 짜기
+
 예제:   
 - [shotokonoko-debug](https://github.com/highright1234/shotokonoko/tree/main/shotokonoko-debug/src/main/java/io/github/highright1234/shotokonokodebug)      
 - [Wiki](https://github.com/highright1234/shotokonoko/wiki)
@@ -76,15 +81,21 @@ val storage = withContext(plugin.asyncDispatcher) {
 }
 player.sendMessage("비밀 이야기 해봐")
 // 10초 지나면 밑에 코드들 작동 안함
-withSafeTimeout(10000L) {
-    player.health = 0.0
-    player.sendMessage("주거 임마")
-}
-val chat = ChatScanner(player).await().getOrThrow().string // Component to String
-Bukkit.broadcast(text("<${player.name}> $chat"))
-storage.set("secret", chat)
-events<EntityDamageEvent>().filter { it.entity == player }.collect {
-    event.player.sendMessage("허접♥")
-    
+ChatScanner(player).await().onSuccess { component ->
+  val chat = component.string // Component to String
+  Bukkit.broadcast(text("<${player.name}> $chat"))
+  storage.set("secret", chat)
+  events<EntityDamageEvent>().filter { it.entity == player }.collect {
+    event.player.sendMessage("허접♥")    
+  }
+}.onFailture { throwable ->
+  when (throwable) {
+    is TimedOutException {
+      ...
+    }
+    is PlayerQuitException {
+      ...
+    }
+  }
 }
 ```
