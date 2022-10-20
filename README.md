@@ -6,6 +6,15 @@
 
 ~~이름은 이렇지만 당신도 쓰게될거야~~
 
+특징:
+- monun님의 라이브러리들의 DSL 빌더의 실행부분을 suspend 형식 지원
+- kommand 느낌의 papi expansion dsl builder
+- MutableDelay( 한글로 뭐라고 할지 모르겠음 )
+- 스토리지 기능
+- 채팅 스캐너
+- 코틀린을 위한 리스닝 최적화
+- 플레이어 데이터 자동제거 collection
+
 예제:   
 - [shotokonoko-debug](https://github.com/highright1234/shotokonoko/tree/main/shotokonoko-debug/src/main/java/io/github/highright1234/shotokonokodebug)      
 - [Wiki](https://github.com/highright1234/shotokonoko/wiki)
