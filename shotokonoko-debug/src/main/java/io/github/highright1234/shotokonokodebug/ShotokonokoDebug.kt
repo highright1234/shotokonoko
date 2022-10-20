@@ -2,7 +2,6 @@ package io.github.highright1234.shotokonokodebug
 
 import com.github.shynixn.mccoroutine.bukkit.SuspendingJavaPlugin
 import com.github.shynixn.mccoroutine.bukkit.launch
-import io.github.highright1234.shotokonoko.Shotokonoko
 import io.github.highright1234.shotokonoko.collections.newPlayerArrayList
 import io.github.highright1234.shotokonoko.coroutine.withSafeTimeout
 import io.github.highright1234.shotokonoko.listener.ChatScanner
@@ -16,9 +15,10 @@ import kotlinx.coroutines.delay
 import net.kyori.adventure.text.Component
 import org.bukkit.event.player.PlayerJoinEvent
 
+@Suppress("Unused")
 class ShotokonokoDebug: SuspendingJavaPlugin() {
     override suspend fun onEnableAsync() {
-        Shotokonoko.register(this)
+//        Shotokonoko.register(this)
         logger.info("${server.pluginManager.getPlugin("PlaceholderAPI") != null}")
         TestPAPI.register()
         kommand {

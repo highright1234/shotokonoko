@@ -10,19 +10,25 @@ import java.lang.ref.WeakReference
 
 internal object PlayerGCProcessor {
 
-    internal fun register() {
-        val plugin = Shotokonoko.plugin
-        plugin.server.pluginManager.registerEvents(QuitL, plugin)
+    private var isRegistered = false
+    private fun register() {
+        if (!isRegistered) {
+            val plugin = Shotokonoko.plugin
+            plugin.server.pluginManager.registerEvents(QuitL, plugin)
+            isRegistered = true
+        }
     }
 
     private val targetMaps = mutableListOf<WeakReference<MutableMap<Player, *>>>()
     private val targetCollections = mutableListOf<WeakReference<MutableCollection<Player>>>()
 
     fun addTarget(collection: MutableCollection<Player>) {
+        register()
         targetCollections += WeakReference(collection)
     }
 
     fun addTarget(map: MutableMap<Player, *>) {
+        register()
         targetMaps += WeakReference(map)
     }
 
