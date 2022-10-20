@@ -26,3 +26,56 @@ plugin.yml
 libraries:
   - io.github.highright1234:shotokonoko:VERSION
 ```
+
+
+
+
+
+
+대충 코드
+```kt
+kommand {
+  register("command") {
+    suspendingExecutes {
+      ...
+    }
+  }
+}
+
+papi {
+  expansion("placeholder") {
+    argument("value") {
+      executes {
+        val value: String by arguments
+        value
+      }
+    }
+  }
+}
+
+val players = newPlayerArrayList() // it removes a player who exit
+val cooldownData = CoolDownAttribute<UUID>(5000L)
+
+...
+
+val event = listen<PlayerJoinEvent> { it.player.name == "HighRight" }
+val player = event.player
+// 쿨다운중 아니면 아래 코드들 실행함
+cooldownData.withCoolDown(player.uniqueId)
+val storage = withContext(plugin.asyncDispatcher) {
+    getDataStore("${player.uniqueId}")
+}
+player.sendMessage("비밀 이야기 해봐")
+// 10초 지나면 밑에 코드들 작동 안함
+withSafeTimeout(10000L) {
+    player.health = 0.0
+    player.sendMessage("주거 임마")
+}
+val chat = ChatScanner(player).await().getOrThrow().string // Component to String
+Bukkit.broadcast(text("<${player.name}> $chat"))
+storage.set("secret", chat)
+events<EntityDamageEvent>().filter { it.entity == player }.collect {
+    event.player.sendMessage("허접♥")
+    
+}
+```
