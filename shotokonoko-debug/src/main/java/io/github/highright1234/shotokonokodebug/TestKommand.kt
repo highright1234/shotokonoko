@@ -6,8 +6,11 @@ import io.github.highright1234.shotokonoko.collections.newPlayerArrayList
 import io.github.highright1234.shotokonoko.coroutine.CoolDownAttribute
 import io.github.highright1234.shotokonoko.coroutine.mutableDelayData
 import io.github.highright1234.shotokonoko.monun.suspendingExecutes
+import io.github.highright1234.shotokonoko.papi.ppapi
 import io.github.monun.kommand.PluginKommand
 import kotlinx.coroutines.delay
+import net.kyori.adventure.text.Component.text
+import net.kyori.adventure.text.format.TextColor
 import org.bukkit.entity.Player
 import java.lang.ref.WeakReference
 import kotlin.reflect.KProperty1
@@ -52,9 +55,42 @@ object TestKommand {
                 }
             }
             then("gc") {
-                executes {
+                suspendingExecutes {
                     System.gc()
                     player.sendMessage("gc ran")
+                }
+            }
+            then("papi_checker") {
+                suspendingExecutes {
+                    val firstResult = "%debug_fdsa_fdsa%".let(::ppapi)
+                    val secondResult = "%debug_asdf%".let(::ppapi)
+                    val thirdResult = "%debug_fdsa%".let(::ppapi)
+                    val fourthResult = "%debug_faq%".let(::ppapi)
+                    val fifthResult = ppapi("%debug_faq%", player)
+
+                    val componentResult = ppapi(
+                        text("%debug_faq%나 머겅")
+                            .color(TextColor.color(0xFF66CC)), player // pink
+                    )
+                    if (
+                        firstResult == "fdsafdsa" &&
+                        secondResult == "faq" &&
+                        thirdResult == "fdsa" &&
+                        fourthResult == "%debug_faq%" &&
+                        fifthResult == "ㅗ"
+                    ) {
+                        player.sendMessage("아주 좋소~")
+                    } else {
+                        player.sendMessage("버근가")
+                    }
+                    listOf(
+                        firstResult,
+                        secondResult,
+                        thirdResult,
+                        fourthResult,
+                        fifthResult
+                    ).forEach(player::sendMessage)
+                    player.sendMessage(componentResult)
                 }
             }
         }

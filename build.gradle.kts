@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.7.10"
+    kotlin("jvm") version Versions.KOTLIN
     id("org.jetbrains.dokka") version Versions.KOTLIN
     `maven-publish`
     signing
@@ -10,23 +10,40 @@ subprojects {
 }
 
 group = "io.github.highright1234"
-version = "0.0.5"
+version = "0.0.6"
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     mavenCentral()
 }
 
+fun DependencyHandlerScope.monunLibrary(name: String, version: String) {
+    compileOnly("io.github.monun:$name-api:$version")
+
+    // 버전 올라갈떄마다 nms 코드 관련 있어서 내가 직접 수정해야함
+    // 귀찮아서 지원 안시킴
+//    api("io.github.monun:$name-api:$version")
+//    runtimeOnly("io.github.monun:$name-core:$version") // LibraryLoader에서 로드해줌
+}
+
 dependencies {
-    compileOnly("io.github.monun:tap-api:${Versions.TAP}")
-    compileOnly("io.github.monun:invfx-api:${Versions.INVFX}")
-    compileOnly("io.github.monun:kommand-api:${Versions.KOMMAND}")
-    compileOnly("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:${Versions.MC_COROUTINE}")
-    compileOnly("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:${Versions.MC_COROUTINE}")
-    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINE}")
-    compileOnly("io.papermc.paper:paper-api:1.19-R0.1-SNAPSHOT")
-    compileOnly(kotlin("stdlib-jdk8"))
-    compileOnly(kotlin("reflect"))
+    compileOnly("me.clip:placeholderapi:${Versions.PLACEHOLDER_API}")
+    implementation("net.bytebuddy:byte-buddy:${Versions.BYTE_BUDDY}")
+    monunLibrary("tap", Versions.TAP)
+    monunLibrary("invfx", Versions.INVFX)
+    monunLibrary("kommand", Versions.KOMMAND)
+
+    // 한번 써보라는 뜻으로 api 함
+    api("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:${Versions.MC_COROUTINE}")
+    runtimeOnly("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:${Versions.MC_COROUTINE}")
+
+    // 코루틴 버전 빨리 안오르기도 하고
+    // 새 프로젝트 짤때마다 추가해야하는거 귀찮음
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINE}")
+    compileOnly("io.papermc.paper:paper-api:${Versions.MINECRAFT}-R0.1-SNAPSHOT")
+    implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("reflect"))
 }
 
 java {
@@ -162,4 +179,5 @@ allprojects {
             setProperty("termsOfServiceAgree", "yes")
         }
     }
+    tasks.withType<Jar> { duplicatesStrategy = DuplicatesStrategy.EXCLUDE }
 }
