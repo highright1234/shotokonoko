@@ -14,11 +14,13 @@ import org.bukkit.event.entity.EntityEvent
 import org.bukkit.event.entity.ProjectileHitEvent
 import org.bukkit.event.player.PlayerEvent
 import org.bukkit.event.player.PlayerQuitEvent
-import kotlin.coroutines.suspendCoroutine
+import org.bukkit.plugin.EventExecutor
+import java.util.*
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
 object ListeningUtil {
+
     suspend fun <T : Event> listener(
         player: Player,
         clazz: Class<T>,
@@ -30,26 +32,26 @@ object ListeningUtil {
         val listener = object: Listener {  }
         val completableDeferred = CompletableDeferred<Result<T>>()
         plugin.server.pluginManager.registerEvent(clazz, listener, priority, { _, event ->
-            if (!ignoreCancelled || event !is Cancellable|| !event.isCancelled) {
-                @Suppress("UNCHECKED_CAST")
-                if (filter(event as T) && event.safePlayer == player) {
-                    completableDeferred.complete(Result.success(event))
-                    HandlerList.unregisterAll(listener)
-                    HandlerList.unregisterAll(exitListener)
-                }
+            @Suppress("UNCHECKED_CAST")
+            if (filter(event as T) && event.safePlayer == player) {
+                completableDeferred.complete(Result.success(event))
+                HandlerList.unregisterAll(listener)
+                HandlerList.unregisterAll(exitListener)
             }
         }, plugin)
+        val eventExecuter = EventExecutor { _, event ->
+            event as PlayerQuitEvent
+            if (player != event.player) return@EventExecutor
+            completableDeferred.complete(Result.failure(PlayerQuitException()))
+            HandlerList.unregisterAll(listener)
+            HandlerList.unregisterAll(exitListener)
+        }
         plugin.server.pluginManager.registerEvent(
             PlayerQuitEvent::class.java,
             exitListener,
             EventPriority.NORMAL,
-            { _, event ->
-                event as PlayerQuitEvent
-                if (player != event.player) return@registerEvent
-                completableDeferred.complete(Result.failure(PlayerQuitException()))
-                HandlerList.unregisterAll(listener)
-                HandlerList.unregisterAll(exitListener)
-            }, plugin
+            eventExecuter,
+            plugin, ignoreCancelled
         )
         return completableDeferred.await()
     }
@@ -76,14 +78,20 @@ object ListeningUtil {
     ): T {
         val listener = object: Listener {  }
         val completableDeferred = CompletableDeferred<T>()
-        plugin.server.pluginManager.registerEvent(clazz, listener, priority, { _, event ->
-            if (!ignoreCancelled || (event is Cancellable && !event.isCancelled)) {
-                @Suppress("UNCHECKED_CAST")
-                if (filter(event as T)) {
-                    completableDeferred.complete(event)
-                }
+        val eventExecutor = EventExecutor { _, event ->
+            @Suppress("UNCHECKED_CAST")
+            if (filter(event as T)) {
+                completableDeferred.complete(event)
             }
-        }, plugin)
+        }
+        plugin.server.pluginManager.registerEvent(
+            clazz,
+            listener,
+            priority,
+            eventExecutor,
+            plugin,
+            ignoreCancelled
+        )
         return completableDeferred.await()
     }
 
@@ -94,14 +102,20 @@ object ListeningUtil {
     ): SharedFlow<T> {
         val listener = object: Listener {  }
         val flow = MutableSharedFlow<T>()
-        plugin.server.pluginManager.registerEvent(clazz, listener, priority, { _, event ->
-            if (!ignoreCancelled || (event is Cancellable && !event.isCancelled)) {
-                plugin.launch {
-                    @Suppress("UNCHECKED_CAST")
-                    flow.emit(event as T)
-                }
+        val eventExecutor = EventExecutor { _, event ->
+            plugin.launch {
+                @Suppress("UNCHECKED_CAST")
+                flow.emit(event as T)
             }
-        }, plugin)
+        }
+        plugin.server.pluginManager.registerEvent(
+            clazz,
+            listener,
+            priority,
+            eventExecutor,
+            plugin,
+            ignoreCancelled
+        )
         return flow.asSharedFlow()
     }
 }

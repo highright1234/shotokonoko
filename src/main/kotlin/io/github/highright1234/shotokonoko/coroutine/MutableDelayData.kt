@@ -4,7 +4,10 @@ import com.github.shynixn.mccoroutine.bukkit.asyncDispatcher
 import io.github.highright1234.shotokonoko.Shotokonoko.plugin
 import kotlinx.coroutines.withContext
 
-fun mutableDelayData(timeMillis: Long) = MutableDelayData(System.currentTimeMillis() + timeMillis)
+fun mutableDelay(timeMillis: Long) = MutableDelayData(System.currentTimeMillis() + timeMillis)
+
+@Deprecated("use mutableDelay", ReplaceWith("mutableDelay(timeMillis)"))
+fun mutableDelayData(timeMillis: Long) = mutableDelay(timeMillis)
 
 class MutableDelayData(whenEnd: Long) {
     // time millis
