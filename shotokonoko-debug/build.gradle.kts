@@ -5,6 +5,7 @@ fun DependencyHandlerScope.monunLibrary(name: String, version: String) {
 }
 
 repositories {
+    maven("https://jitpack.io")
     maven("https://repo.papermc.io/repository/maven-public/")
     mavenCentral()
 }
@@ -15,6 +16,7 @@ dependencies {
     monunLibrary("kommand", Versions.KOMMAND)
     compileOnly(kotlin("stdlib-jdk8"))
     compileOnly(kotlin("reflect"))
+    compileOnly("com.github.outstanding1301:donation-alert-api:1.0.0")
     compileOnly("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:${Versions.MC_COROUTINE}")
     compileOnly("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:${Versions.MC_COROUTINE}")
     compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINE}")

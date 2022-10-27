@@ -2,9 +2,12 @@ package io.github.highright1234.shotokonokodebug
 
 import com.github.shynixn.mccoroutine.bukkit.launch
 import io.github.highright1234.shotokonoko.Shotokonoko.plugin
+import io.github.highright1234.shotokonoko.bungee.BungeePlayer
+import io.github.highright1234.shotokonoko.bungee.BungeeServer
+import io.github.highright1234.shotokonoko.bungee.pluginmessage.BungeeUtil
 import io.github.highright1234.shotokonoko.collections.newPlayerArrayList
-import io.github.highright1234.shotokonoko.coroutine.CoolDownAttribute
-import io.github.highright1234.shotokonoko.coroutine.mutableDelayData
+import io.github.highright1234.shotokonoko.coroutine.CooldownAttribute
+import io.github.highright1234.shotokonoko.coroutine.mutableDelay
 import io.github.highright1234.shotokonoko.monun.suspendingExecutes
 import io.github.highright1234.shotokonoko.papi.ppapi
 import io.github.monun.kommand.PluginKommand
@@ -18,15 +21,16 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
 object TestKommand {
-    private val coolDownAttribute = CoolDownAttribute<Player>(5000L)
+    private val coolDownAttribute = CooldownAttribute<Player>(5000L)
     fun register(pluginKommand: PluginKommand) {
         pluginKommand.register("test") {
             requires { isPlayer }
             suspendingExecutes {
-                coolDownAttribute.withCoolDown(player) {
+                coolDownAttribute.withCooldown(player) {
                     player.sendMessage("${it}ms 쿨타임 있음")
+                    return@suspendingExecutes
                 }
-                val delay = mutableDelayData(5000L)
+                val delay = mutableDelay(5000L)
                 player.sendMessage("launched")
                 plugin.launch {
                     delay(1000L)
@@ -42,7 +46,7 @@ object TestKommand {
             }
             then("garbage_check") {
                 suspendingExecutes {
-                    val test = newPlayerArrayList()
+                    newPlayerArrayList()
                     val clazz = Class.forName(
                         "io.github.highright1234.shotokonoko.collections.PlayerGCProcessor"
                     ).kotlin
@@ -91,6 +95,39 @@ object TestKommand {
                         fifthResult
                     ).forEach(player::sendMessage)
                     player.sendMessage(componentResult)
+                }
+            }
+            then("bungee") {
+                requires { BungeeUtil.isBungee }
+                then("connect") {
+                    then("name" to string()) {
+                        executes {
+                            BungeeUtil.connect(player, BungeeServer(it["name"]))
+                        }
+                    }
+                }
+                then("this_server") {
+                    suspendingExecutes {
+                        BungeeUtil.getServer().await()
+                            .let { "name: ${it.name}" }
+                            .let(player::sendMessage)
+                    }
+                }
+                then("servers") {
+                    suspendingExecutes {
+                        BungeeUtil.getServers().await()
+                            .joinToString { it.name }
+                            .let { "servers: $it" }
+                            .let(player::sendMessage)
+                    }
+                }
+                then("message") {
+                    suspendingExecutes {
+                        BungeeUtil.message(
+                            BungeePlayer(player.name),
+                            text("뀨").color(TextColor.color(0xFF66CC))
+                        )
+                    }
                 }
             }
         }
