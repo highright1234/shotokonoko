@@ -1,0 +1,8 @@
+name: ShotokonokoDebug
+main: io.github.highright1234.shotokonokodebug.ShotokonokoDebug
+author: "HighRight"
+version: 0.0.1
+softdepend:
+  - PlaceholderAPI
+libraries:
+  - io.github.highright1234:shotokonoko-bungee:0.1.0
