@@ -1,23 +1,27 @@
 plugins {
-    id("org.jetbrains.dokka") version Versions.KOTLIN
     `maven-publish`
     signing
 }
 
-tasks {
-    javadoc {
-        options.encoding = "UTF-8"
-    }
 
-    create<Jar>("sourcesJar") {
-        archiveClassifier.set("sources")
-        from(sourceSets["main"].allSource)
-    }
+listOf("bukkit", "bungee").forEach { platform ->
+    project(":${rootProject.name}-$platform") {
+        tasks {
+            javadoc {
+                options.encoding = "UTF-8"
+            }
 
-    create<Jar>("javadocJar") {
-        archiveClassifier.set("javadoc")
-        dependsOn("dokkaHtml")
-        from("$buildDir/dokka/html")
+            create<Jar>("sourcesJar") {
+                archiveClassifier.set("sources")
+                from(sourceSets["main"].allSource)
+            }
+
+            create<Jar>("javadocJar") {
+                archiveClassifier.set("javadoc")
+                dependsOn("dokkaHtml")
+                from("$buildDir/dokka/html")
+            }
+        }
     }
 }
 
@@ -48,9 +52,9 @@ publishing {
     publications {
         fun MavenPublication.setup(target: Project) {
             artifactId = target.name
-            from(project.components["java"])
-            artifact(project.tasks["sourcesJar"])
-            artifact(project.tasks["javadocJar"])
+            from(target.components["java"])
+            artifact(target.tasks["sourcesJar"])
+            artifact(target.tasks["javadocJar"])
 
             pom {
                 name.set(target.name)

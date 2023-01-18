@@ -1,16 +1,8 @@
 plugins {
     kotlin("jvm") version Versions.KOTLIN
+    id("org.jetbrains.dokka") version Versions.KOTLIN
 }
 
-subprojects {
-    apply(plugin = "org.jetbrains.kotlin.jvm")
-    java {
-        toolchain.languageVersion.set(JavaLanguageVersion.of(17))
-    }
-    repositories {
-        mavenCentral()
-    }
-}
 
 group = "io.github.highright1234"
 version = "0.1.0"
@@ -22,6 +14,19 @@ repositories {
 }
 
 subprojects {
+    apply(plugin = "org.jetbrains.kotlin.jvm")
+    apply(plugin = "org.jetbrains.dokka")
+
+    group = rootProject.group
+    version = rootProject.version
+
+    java {
+        toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    }
+    repositories {
+        mavenCentral()
+    }
+
     if ("publish" in project.name) return@subprojects
     dependencies {
         val platform =
