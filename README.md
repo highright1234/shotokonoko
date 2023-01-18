@@ -15,6 +15,9 @@
 - 채팅 스캐너
 - 코틀린을 위한 리스닝 최적화
 - 플레이어 데이터 자동제거 collection
+- DynamicLoader(central 이외의 RemoteRepository서버 이용가능)
+- BungeeUtil
+- PluginMessageUtil
 
 TODO:
 - storage 업그레이드
@@ -69,14 +72,16 @@ papi {
 }
 
 val players = newPlayerArrayList() // it removes a player who exit
-val cooldownData = CoolDownAttribute<UUID>(5000L)
+val cooldownData = CooldownAttribute<UUID>(5000L)
 
 ...
 
 val event = listen<PlayerJoinEvent> { it.player.name == "HighRight" }
 val player = event.player
 // 쿨다운중 아니면 아래 코드들 실행함
-cooldownData.withCoolDown(player.uniqueId)
+cooldownData.withCoolDown(player.uniqueId) {
+  return
+}
 val storage = withContext(plugin.asyncDispatcher) {
     getDataStore("${player.uniqueId}")
 }
@@ -91,7 +96,7 @@ ChatScanner(player).await().onSuccess { component ->
   }
 }.onFailture { throwable ->
   when (throwable) {
-    is TimedOutException {
+    is TimeoutCancellationException {
       ...
     }
     is PlayerQuitException {
