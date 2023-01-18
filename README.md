@@ -18,14 +18,14 @@
 - DynamicLoader(central 이외의 RemoteRepository서버 이용가능)
 - BungeeUtil
 - PluginMessageUtil
+- 번지코드 config api
 
 TODO:
 - storage 업그레이드
 - MutableDelay 최적화
-- CoolDownAttribute를 MutableDelay로 짜기
 
 예제:   
-- [shotokonoko-debug](https://github.com/highright1234/shotokonoko/tree/main/shotokonoko-debug/src/main/java/io/github/highright1234/shotokonokodebug)      
+- [shotokonoko-debug](https://github.com/highright1234/shotokonoko/tree/main/shotokonoko-bukkit-debug/src/main/java/io/github/highright1234/shotokonokodebug)      
 - [Wiki](https://github.com/highright1234/shotokonoko/wiki)
 
 ### 사용법
@@ -36,21 +36,31 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.github.highright1234:shotokonoko:VERSION")
+    // for bukkit
+    compileOnly("io.github.highright1234:shotokonoko-bukkit:VERSION")
+    // for bungee
+    compileOnly("io.github.highright1234:shotokonoko-bungee:VERSION")
 }
 ```
+
+
 plugin.yml
 ```yaml
 libraries:
-  - io.github.highright1234:shotokonoko:VERSION
+  - io.github.highright1234:shotokonoko-bukkit:VERSION
+```
+
+bungee.yml
+```yaml
+libraries:
+  - io.github.highright1234:shotokonoko-bungee:VERSION
 ```
 
 
 
 
 
-
-대충 코드
+대충 버킷 코드
 ```kt
 kommand {
   register("command") {
