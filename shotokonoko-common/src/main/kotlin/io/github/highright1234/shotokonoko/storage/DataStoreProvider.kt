@@ -1,14 +1,14 @@
 package io.github.highright1234.shotokonoko.storage
 
-import com.github.shynixn.mccoroutine.bungeecord.bungeeCordDispatcher
-import com.github.shynixn.mccoroutine.bungeecord.launch
-import io.github.highright1234.shotokonoko.Shotokonoko.plugin
+
+import io.github.highright1234.shotokonoko.PlatformManager
 import io.github.highright1234.shotokonoko.coroutine.MutableDelayData
 import io.github.highright1234.shotokonoko.coroutine.mutableDelay
+import io.github.highright1234.shotokonoko.launchAsync
 import kotlinx.coroutines.withContext
 
 suspend fun <T: DataStore> DataStoreProvider<T>.getStoreAsync(name: String): T =
-    withContext(plugin.bungeeCordDispatcher) { getStore(name) }
+    withContext(PlatformManager.asyncDispatcher) { getStore(name) }
 
 abstract class DataStoreProvider<T : DataStore> {
 
@@ -19,28 +19,30 @@ abstract class DataStoreProvider<T : DataStore> {
     abstract fun getStore(name: String): T
 
     protected fun registerManager(name: String, dataStore: T) {
-        launchStoreRemover(name, dataStore)
+        launchStoreRemover(name)
         AutoSaver.register(dataStore)
     }
 
-    internal fun removeAllStoreCaches() {
-        stores.forEach { (name, store) ->
-            removeStoreCache(name, store)
+    fun removeAllStoreCaches() {
+        stores.forEach { (name, _) ->
+            removeStoreCache(name)
         }
     }
 
-    private fun removeStoreCache(name: String, store: T) {
+    fun removeStoreCache(name: String) {
+        val store = stores[name] ?: return
         stores -= name
         removingDelayData -= store
         AutoSaver.unregister(store)
     }
 
-    private fun launchStoreRemover(name: String, store: T) {
+    protected fun launchStoreRemover(name: String) {
+        val store = stores[name] ?: return
         val mutableDelayData = mutableDelay(delayToRemove)
         removingDelayData[store] = mutableDelayData
-        plugin.launch(plugin.bungeeCordDispatcher) {
+        launchAsync {
             mutableDelayData.block()
-            removeStoreCache(name, store)
+            removeStoreCache(name)
         }
     }
 }

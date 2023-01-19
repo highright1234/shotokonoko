@@ -1,7 +1,6 @@
 package io.github.highright1234.shotokonoko.loader
 
-import io.github.highright1234.shotokonoko.Shotokonoko.plugin
-import org.bukkit.plugin.java.JavaPluginLoader
+import io.github.highright1234.shotokonoko.PlatformManager
 import org.eclipse.aether.DefaultRepositorySystemSession
 import org.eclipse.aether.RepositorySystem
 import org.eclipse.aether.artifact.DefaultArtifact
@@ -23,7 +22,7 @@ object DynamicLoader {
     fun load(repositoriesList: List<Pair<String, String>>, dependenciesList: List<String>) {
         // 대충 LibraryLoader 코드 코틀린형식으로 만듦
         if (repositoriesList.isEmpty() || dependenciesList.isEmpty()) return
-        val logger = plugin.logger
+        val logger = PlatformManager.logger
         logger.info("Loading ${dependenciesList.size} libraries... please wait")
 
         val dependencies = dependenciesList
@@ -72,11 +71,11 @@ object DynamicLoader {
     }
 
     private object LibraryLoaderField {
-        private val pluginLoader = plugin.pluginLoader as JavaPluginLoader
+        private val classloader = PlatformManager.plugin.javaClass.classLoader
         private val libraryLoader
-        get() = JavaPluginLoader::class.java.getDeclaredField("libraryLoader").apply {
-            isAccessible = true
-        }[pluginLoader]
+        get() = classloader.javaClass.classLoader.javaClass
+            .getDeclaredField("libraryLoader")
+            .apply { isAccessible = true }[classloader]
 
         operator fun <T> getValue(
             thisRef: Any?,

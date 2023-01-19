@@ -1,8 +1,6 @@
 package io.github.highright1234.shotokonoko.coroutine
 
-import com.github.shynixn.mccoroutine.bungeecord.bungeeCordDispatcher
-import com.github.shynixn.mccoroutine.bungeecord.launch
-import io.github.highright1234.shotokonoko.Shotokonoko.plugin
+import io.github.highright1234.shotokonoko.launchAsync
 import java.util.concurrent.ConcurrentHashMap
 
 class CooldownAttribute<T>(private val coolDownTime: Long) {
@@ -29,7 +27,7 @@ class CooldownAttribute<T>(private val coolDownTime: Long) {
         val timeToRun = delayedTime
         val mutableDelayData = MutableDelayData(timeToRun)
         coolDownMap[t] = mutableDelayData
-        plugin.launch(plugin.bungeeCordDispatcher) {
+        launchAsync {
             mutableDelayData.block()
             coolDownMap -= t
         }

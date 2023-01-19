@@ -16,8 +16,6 @@ fun DependencyHandlerScope.monunLibrary(name: String, version: String) {
 }
 
 dependencies {
-    // https://mvnrepository.com/artifact/org.apache.maven.resolver/maven-resolver-api
-    compileOnly("org.apache.maven.resolver:maven-resolver-api:1.8.2")
     compileOnly("me.clip:placeholderapi:${Versions.PLACEHOLDER_API}")
     implementation("net.bytebuddy:byte-buddy:${Versions.BYTE_BUDDY}")
     monunLibrary("tap", Versions.TAP)

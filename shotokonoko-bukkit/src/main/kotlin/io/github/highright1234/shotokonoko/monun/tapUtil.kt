@@ -10,16 +10,14 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import org.bukkit.entity.Player
 import org.bukkit.event.player.PlayerJoinEvent
-import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.event.server.PluginDisableEvent
 
 fun FakeEntityServer.init(player: Player) {
-    plugin.run {
-        launch {
-            while (true) {
-                update()
-                delay(1)
-            }
+    addPlayer(player)
+    plugin.launch {
+        while (player.isOnline) {
+            update()
+            delay(1)
         }
     }
 }
@@ -32,12 +30,6 @@ fun FakeEntityServer.init(predicate: ((player: Player) -> Boolean) = { true }) {
                 .map { it.player }
                 .filter(predicate)
                 .collect { addPlayer(it) }
-        }
-        launch {
-            events<PlayerQuitEvent>()
-                .map { it.player }
-                .filter(predicate)
-                .collect { removePlayer(it) }
         }
         launch {
             while (true) {

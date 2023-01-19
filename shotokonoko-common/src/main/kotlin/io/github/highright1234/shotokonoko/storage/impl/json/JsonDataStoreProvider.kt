@@ -1,7 +1,7 @@
 package io.github.highright1234.shotokonoko.storage.impl.json
 
 import com.google.common.hash.Hashing
-import io.github.highright1234.shotokonoko.Shotokonoko.plugin
+import io.github.highright1234.shotokonoko.PlatformManager
 import io.github.highright1234.shotokonoko.storage.DataStoreProvider
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets
 object JsonDataStoreProvider : DataStoreProvider<JsonDataStore>() {
 
     init {
-        File(plugin.dataFolder, "store").apply {
+        File(PlatformManager.dataFolder, "store").apply {
             if(!exists()) mkdir()
         }
     }
@@ -21,7 +21,7 @@ object JsonDataStoreProvider : DataStoreProvider<JsonDataStore>() {
             removingDelayData[it]!!.timeToRun = System.currentTimeMillis() + delayToRemove
             return it
         }
-        val file = File(plugin.dataFolder, "store/${name.sha256}.json")
+        val file = File(PlatformManager.dataFolder, "store/${name.sha256}.json")
         val store = JsonDataStore(file)
         registerManager(name, store)
         stores[name] = store

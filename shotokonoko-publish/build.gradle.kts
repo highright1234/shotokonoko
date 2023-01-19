@@ -3,8 +3,14 @@ plugins {
     signing
 }
 
+// 퍼블리쉬 해야하는놈들
+val publishStuff = listOf(
+    "bungee",
+    "bukkit",
+    "common"
+)
 
-listOf("bukkit", "bungee").forEach { platform ->
+publishStuff.forEach { platform ->
     project(":${rootProject.name}-$platform") {
         tasks {
             javadoc {
@@ -24,7 +30,6 @@ listOf("bukkit", "bungee").forEach { platform ->
         }
     }
 }
-
 
 publishing {
     repositories {
@@ -83,18 +88,21 @@ publishing {
                 }
             }
         }
-        val bukkit = project(":${rootProject.name}-bukkit")
-        val bungee = project(":${rootProject.name}-bungee")
-        create<MavenPublication>("bukkit") {
-            setup(bukkit)
-        }
-        create<MavenPublication>("bungee") {
-            setup(bungee)
+
+        publishStuff.forEach {
+            create<MavenPublication>(it) {
+                setup(project(":${rootProject.name}-$it"))
+            }
         }
     }
 }
 
 signing {
     isRequired = true
-    sign(publishing.publications["bukkit"], publishing.publications["bungee"])
+
+    publishStuff
+        .map { publishing.publications[it] }
+        .toTypedArray()
+        .let { sign(*it) }
+
 }

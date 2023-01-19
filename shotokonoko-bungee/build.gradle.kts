@@ -7,8 +7,6 @@ repositories {
 }
 
 dependencies {
-    // https://mvnrepository.com/artifact/org.apache.maven.resolver/maven-resolver-api
-    compileOnly("org.apache.maven.resolver:maven-resolver-api:1.8.2")
     implementation("net.bytebuddy:byte-buddy:${Versions.BYTE_BUDDY}")
     // 한번 써보라는 뜻으로 api 함
 

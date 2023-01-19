@@ -9,7 +9,7 @@ import java.io.File
 internal val gson = GsonBuilder()
     .create()
 
-class JsonDataStore(private val file: File) : DataStore {
+class JsonDataStore internal constructor(private val file: File) : DataStore {
 
     private lateinit var json: JsonObject
 
