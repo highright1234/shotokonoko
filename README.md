@@ -1,7 +1,7 @@
 # Shotokonoko
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.highright1234/shotokonoko-bukkit)](https://search.maven.org/artifact/io.github.highright1234/shotokonoko)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.highright1234/shotokonoko-bungee)](https://search.maven.org/artifact/io.github.highright1234/shotokonoko)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.highright1234/shotokonoko-bukkit)](https://search.maven.org/artifact/io.github.highright1234/shotokonoko-bukkit)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.highright1234/shotokonoko-bungee)](https://search.maven.org/artifact/io.github.highright1234/shotokonoko-bungee)
 
 ### Utilities for Paper Kotlin plugin
 
