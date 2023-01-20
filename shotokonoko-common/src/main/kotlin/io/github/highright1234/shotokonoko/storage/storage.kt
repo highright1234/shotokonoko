@@ -24,7 +24,7 @@ object Storage {
     val dataStoreProviders = Collections.synchronizedList(mutableListOf<DataStoreProvider<*>>(
         JsonDataStoreProvider
     ))
-    var defaultProvider = JsonDataStoreProvider
+    var defaultProvider: DataStoreProvider<out DataStore> = JsonDataStoreProvider
 
     fun registerProvider(dataStoreProvider: DataStoreProvider<*>) {
         dataStoreProviders += dataStoreProvider

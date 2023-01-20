@@ -11,6 +11,7 @@ object PlatformManagerImpl {
     fun launchAsync(block: suspend CoroutineScope.() -> Unit): Job {
         return Shotokonoko.plugin.launch { block() }
     }
+    val pluginLoader: Any get() = Shotokonoko.plugin.proxy.pluginManager
     val asyncDispatcher: CoroutineContext get() = Shotokonoko.plugin.bungeeCordDispatcher
     val plugin: Any get() = Shotokonoko.plugin
 }

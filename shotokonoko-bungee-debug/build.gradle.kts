@@ -51,4 +51,4 @@ tasks.register<Jar>("pluginsUpdate") {
     }
 }
 
-tasks.named("build") { finalizedBy("pluginsUpdate") }
+//tasks.named("build") { finalizedBy("pluginsUpdate") }

@@ -1,0 +1,14 @@
+
+
+enable: false
+
+address: localhost
+port: 27017
+
+database: shotokonoko
+collection: players
+
+user:
+  username: root
+  password: root
+  database: admin

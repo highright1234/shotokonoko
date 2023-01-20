@@ -1,8 +1,12 @@
 package io.github.highright1234.shotokonoko
 
+import com.google.gson.GsonBuilder
 import io.github.highright1234.shotokonoko.storage.AutoSaver
+import io.github.highright1234.shotokonoko.storage.ConfigurationGsonSerializer
 import io.github.highright1234.shotokonoko.storage.Storage
+import io.github.highright1234.shotokonoko.storage.impl.json.JsonDataStore
 import org.bukkit.Bukkit
+import org.bukkit.configuration.serialization.ConfigurationSerializable
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
@@ -24,6 +28,9 @@ object Shotokonoko {
     val plugin: JavaPlugin get() = _plugin
 
     private fun init(plugin: JavaPlugin) {
+        JsonDataStore.gson = GsonBuilder()
+            .registerTypeHierarchyAdapter(ConfigurationSerializable::class.java, ConfigurationGsonSerializer)
+            .create()
         plugin.server.pluginManager.registerEvents(DataCleaner, plugin)
     }
 

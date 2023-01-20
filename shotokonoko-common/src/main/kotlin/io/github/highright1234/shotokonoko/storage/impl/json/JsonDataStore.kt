@@ -6,10 +6,12 @@ import com.google.gson.JsonParser
 import io.github.highright1234.shotokonoko.storage.DataStore
 import java.io.File
 
-internal val gson = GsonBuilder()
-    .create()
-
 class JsonDataStore internal constructor(private val file: File) : DataStore {
+
+    companion object {
+        var gson = GsonBuilder()
+            .create()
+    }
 
     private lateinit var json: JsonObject
 

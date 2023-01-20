@@ -71,11 +71,11 @@ object DynamicLoader {
     }
 
     private object LibraryLoaderField {
-        private val classloader = PlatformManager.plugin.javaClass.classLoader
+        private val pluginLoader = PlatformManager.pluginLoader
         private val libraryLoader
-        get() = classloader.javaClass.classLoader.javaClass
+        get() = pluginLoader.javaClass
             .getDeclaredField("libraryLoader")
-            .apply { isAccessible = true }[classloader]
+            .apply { isAccessible = true }[pluginLoader]
 
         operator fun <T> getValue(
             thisRef: Any?,

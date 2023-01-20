@@ -2,6 +2,7 @@ package io.github.highright1234.shotokonokodebug
 
 import com.github.shynixn.mccoroutine.bukkit.SuspendingJavaPlugin
 import com.github.shynixn.mccoroutine.bukkit.launch
+import com.mongodb.MongoCredential
 import com.outstandingboy.donationalert.entity.Donation
 import io.github.highright1234.shotokonoko.collections.newPlayerArrayList
 import io.github.highright1234.shotokonoko.listener.ChatScanner
@@ -10,12 +11,15 @@ import io.github.highright1234.shotokonoko.listener.exception.PlayerQuitExceptio
 import io.github.highright1234.shotokonoko.listener.listen
 import io.github.highright1234.shotokonoko.loader.DynamicLoader
 import io.github.highright1234.shotokonoko.plus
+import io.github.highright1234.shotokonoko.storage.impl.mongodb.MongoDataStoreProvider
+import io.github.highright1234.shotokonokodebug.config.MongoConfig
 import io.github.monun.kommand.kommand
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 import net.kyori.adventure.text.Component
 import org.bukkit.event.player.PlayerJoinEvent
+import java.net.InetSocketAddress
 
 @Suppress("Unused")
 class ShotokonokoDebug: SuspendingJavaPlugin() {
@@ -34,6 +38,20 @@ class ShotokonokoDebug: SuspendingJavaPlugin() {
         }
         logger.info("$donation")
         logger.info("${server.pluginManager.getPlugin("PlaceholderAPI") != null}")
+        MongoConfig.apply {
+            load("mongo.yml")
+            if (enable) {
+                val credential = MongoConfig.User.run {
+                    MongoCredential.createCredential(username, database, password.toCharArray())
+                }
+                MongoDataStoreProvider.register(
+                    InetSocketAddress(address, port),
+                    credential,
+                    database,
+                    collection
+                )
+            }
+        }
         TestPAPI.register()
         kommand {
             TestKommand.register(this)

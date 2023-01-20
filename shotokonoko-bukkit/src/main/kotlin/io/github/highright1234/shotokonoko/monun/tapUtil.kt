@@ -4,6 +4,7 @@ import com.github.shynixn.mccoroutine.bukkit.launch
 import io.github.highright1234.shotokonoko.Shotokonoko.plugin
 import io.github.highright1234.shotokonoko.listener.events
 import io.github.highright1234.shotokonoko.listener.listen
+import io.github.monun.tap.config.ConfigSupport
 import io.github.monun.tap.fake.FakeEntityServer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.map
 import org.bukkit.entity.Player
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.server.PluginDisableEvent
+import java.io.File
 
 fun FakeEntityServer.init(player: Player) {
     addPlayer(player)
@@ -42,4 +44,21 @@ fun FakeEntityServer.init(predicate: ((player: Player) -> Boolean) = { true }) {
             server.onlinePlayers.forEach(::removePlayer)
         }
     }
+}
+
+
+fun ConfigSupport.load(target: Any, file: File) {
+    val resourcePath: String = file.toString().removePrefix(plugin.dataFolder.toString())
+    if (!file.exists()) {
+        plugin.saveResource(resourcePath, false)
+    }
+    compute(target, file)
+}
+
+fun ConfigSupport.load(target: Any, path: String) {
+    val file = File(plugin.dataFolder, path)
+    if (!file.exists()) {
+        plugin.saveResource(path, false)
+    }
+    compute(target, file)
 }

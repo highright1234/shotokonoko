@@ -18,13 +18,12 @@ object JsonDataStoreProvider : DataStoreProvider<JsonDataStore>() {
 
     override fun getStore(name: String): JsonDataStore {
         stores[name]?.let {
-            removingDelayData[it]!!.timeToRun = System.currentTimeMillis() + delayToRemove
+            removingDelayData[it]?.timeToRun = System.currentTimeMillis() + delayToRemove
             return it
         }
         val file = File(PlatformManager.dataFolder, "store/${name.sha256}.json")
         val store = JsonDataStore(file)
         registerManager(name, store)
-        stores[name] = store
         return store
     }
 

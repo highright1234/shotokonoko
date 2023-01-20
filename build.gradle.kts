@@ -38,7 +38,7 @@ subprojects {
 
         compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.COROUTINE}")
         if (isDebug) {
-
+            compileOnly("org.mongodb:mongodb-driver-sync:4.8.2")
             compileOnly(project(":${project.name}".substring(0, project.name.length - 5)))
             compileOnly(kotlin("stdlib-jdk8"))
             compileOnly(kotlin("reflect"))
