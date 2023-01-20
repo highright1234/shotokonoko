@@ -11,7 +11,8 @@
 - monun님의 라이브러리들의 DSL 빌더의 실행부분을 suspend 형식 지원
 - kommand 느낌의 papi expansion dsl builder
 - MutableDelay( 한글로 뭐라고 할지 모르겠음 )
-- 스토리지 기능
+- 스토리지 기능  
+  - Json, MongoDB 지원
 - 채팅 스캐너
 - 코틀린을 위한 리스닝 최적화
 - 플레이어 데이터 자동제거 collection
