@@ -39,9 +39,7 @@ object Shotokonoko {
         fun PluginDisableEvent.on() {
             if (plugin != Shotokonoko.plugin) return
             AutoSaver.isEnabled = false
-            Storage.dataStoreProviders.forEach {
-                it.removeAllStoreCaches()
-            }
+            Storage.dataStoreProviders.forEach { it.close() }
         }
     }
 }

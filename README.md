@@ -24,6 +24,8 @@
 TODO:
 - storage 업그레이드
 - MutableDelay 최적화
+- 버킷의 문제인지 라이브러리의 문제인진 모르겠지만  
+  1틱정도 후에 리스너가 실행되는것같음 
 
 예제:   
 - [shotokonoko-debug](https://github.com/highright1234/shotokonoko/tree/main/shotokonoko-bukkit-debug/src/main/java/io/github/highright1234/shotokonokodebug)      
@@ -32,6 +34,12 @@ TODO:
 ### 사용법
 build.gradle.kts
 ```kts
+kotlin {
+  jvmToolchain {
+    languageVersion.set(JavaLanguageVersion.of(17))
+  }
+}
+
 repositories {
     mavenCentral()
 }

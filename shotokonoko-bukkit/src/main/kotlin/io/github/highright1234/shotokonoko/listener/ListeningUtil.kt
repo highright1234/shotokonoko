@@ -38,7 +38,7 @@ object ListeningUtil {
                 HandlerList.unregisterAll(listener)
                 HandlerList.unregisterAll(exitListener)
             }
-        }, plugin)
+        }, plugin, ignoreCancelled)
         val eventExecuter = EventExecutor { _, event ->
             event as PlayerQuitEvent
             if (player != event.player) return@EventExecutor
@@ -53,6 +53,7 @@ object ListeningUtil {
             eventExecuter,
             plugin, ignoreCancelled
         )
+
         return completableDeferred.await()
     }
 
@@ -82,6 +83,7 @@ object ListeningUtil {
             @Suppress("UNCHECKED_CAST")
             if (filter(event as T)) {
                 completableDeferred.complete(event)
+                HandlerList.unregisterAll(listener)
             }
         }
         plugin.server.pluginManager.registerEvent(

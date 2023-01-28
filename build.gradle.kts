@@ -1,11 +1,12 @@
 plugins {
     kotlin("jvm") version Versions.KOTLIN
     id("org.jetbrains.dokka") version Versions.KOTLIN
+    kotlin("plugin.serialization") version Versions.KOTLIN
 }
 
 
 group = "io.github.highright1234"
-version = "0.1.2"
+version = "0.1.3"
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")

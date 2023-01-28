@@ -1,5 +1,7 @@
 package io.github.highright1234.shotokonoko
 
+import io.github.highright1234.shotokonoko.storage.Storage
+import io.github.highright1234.shotokonoko.storage.impl.json.JsonDataStoreProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import java.io.File
@@ -14,9 +16,20 @@ internal fun launchAsync(block: suspend CoroutineScope.() -> Unit): Job = Platfo
 
 object PlatformManager {
 
-    private val platformManager : Any by lazy {
-        Class.forName(PlatformManager::class.java.packageName + ".PlatformManagerImpl")
+    private var isInited = false
+
+    private val platformManager : Any get() {
+        val out = Class.forName(PlatformManager::class.java.packageName + ".PlatformManagerImpl")
             .kotlin.objectInstance!!
+        if (!isInited) {
+            isInited = true
+            val storage = JsonDataStoreProvider(File(dataFolder, "store"))
+            Storage.apply {
+                defaultProvider = storage
+                dataStoreProviders += storage
+            }
+        }
+        return out
     }
 
     fun launchAsync(block: suspend CoroutineScope.() -> Unit): Job {

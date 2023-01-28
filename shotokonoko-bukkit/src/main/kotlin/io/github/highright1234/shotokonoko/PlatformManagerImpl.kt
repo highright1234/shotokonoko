@@ -7,7 +7,7 @@ import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
 
 @Suppress("Unused")
-object PlatformManagerImpl {
+internal object PlatformManagerImpl {
     fun launchAsync(block: suspend CoroutineScope.() -> Unit): Job {
         return Shotokonoko.plugin.launch(asyncDispatcher) { block() }
     }
@@ -15,4 +15,7 @@ object PlatformManagerImpl {
     val pluginLoader: Any get() = Shotokonoko.plugin.pluginLoader
     val asyncDispatcher: CoroutineContext get() = Shotokonoko.plugin.asyncDispatcher
     val plugin: Any get() = Shotokonoko.plugin
+
+    lateinit var onDisable : () -> Unit
+
 }

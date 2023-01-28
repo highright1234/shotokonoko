@@ -7,7 +7,7 @@ import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
 
 @Suppress("Unused")
-object PlatformManagerImpl {
+internal object PlatformManagerImpl {
     fun launchAsync(block: suspend CoroutineScope.() -> Unit): Job {
         return Shotokonoko.plugin.launch { block() }
     }

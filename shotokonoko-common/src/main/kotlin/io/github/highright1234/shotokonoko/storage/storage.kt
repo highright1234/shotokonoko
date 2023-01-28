@@ -1,6 +1,5 @@
 package io.github.highright1234.shotokonoko.storage
 
-import io.github.highright1234.shotokonoko.storage.impl.json.JsonDataStoreProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.*
@@ -21,10 +20,8 @@ fun <T : DataStore> DataStoreProvider<T>.getDataStore(name: String): T
 
 object Storage {
 
-    val dataStoreProviders = Collections.synchronizedList(mutableListOf<DataStoreProvider<*>>(
-        JsonDataStoreProvider
-    ))
-    var defaultProvider: DataStoreProvider<out DataStore> = JsonDataStoreProvider
+    val dataStoreProviders = Collections.synchronizedList(mutableListOf<DataStoreProvider<*>>())
+    lateinit var defaultProvider: DataStoreProvider<out DataStore>
 
     fun registerProvider(dataStoreProvider: DataStoreProvider<*>) {
         dataStoreProviders += dataStoreProvider

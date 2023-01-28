@@ -8,11 +8,11 @@ import io.github.highright1234.shotokonoko.storage.impl.json.JsonDataStore
 import org.bson.Document
 import org.bson.conversions.Bson
 
-class MongoDataStore internal constructor(val id: String) : DataStore {
+class MongoDataStore internal constructor(private val provider: MongoDataStoreProvider, val id: String) : DataStore {
 
     private val gson get() = JsonDataStore.gson
 
-    val collection: MongoCollection<Document> get() = MongoDataStoreProvider.collection!!
+    val collection: MongoCollection<Document> get() = provider.collection!!
     val filter: Bson = Filters.eq("_id", id)
 
     override fun <T : Any> set(key: String, value: T?) {

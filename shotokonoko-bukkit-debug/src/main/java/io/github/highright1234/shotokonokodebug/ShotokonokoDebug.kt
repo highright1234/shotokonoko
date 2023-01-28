@@ -11,12 +11,11 @@ import io.github.highright1234.shotokonoko.listener.exception.PlayerQuitExceptio
 import io.github.highright1234.shotokonoko.listener.listen
 import io.github.highright1234.shotokonoko.loader.DynamicLoader
 import io.github.highright1234.shotokonoko.plus
+import io.github.highright1234.shotokonoko.storage.Storage
 import io.github.highright1234.shotokonoko.storage.impl.mongodb.MongoDataStoreProvider
 import io.github.highright1234.shotokonokodebug.config.MongoConfig
 import io.github.monun.kommand.kommand
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.*
 import net.kyori.adventure.text.Component
 import org.bukkit.event.player.PlayerJoinEvent
 import java.net.InetSocketAddress
@@ -44,12 +43,16 @@ class ShotokonokoDebug: SuspendingJavaPlugin() {
                 val credential = MongoConfig.User.run {
                     MongoCredential.createCredential(username, database, password.toCharArray())
                 }
-                MongoDataStoreProvider.register(
-                    InetSocketAddress(address, port),
-                    credential,
-                    database,
-                    collection
-                )
+                val storage = MongoDataStoreProvider().apply {
+                    start(
+                        InetSocketAddress(address, port),
+                        credential,
+                        MongoConfig.database,
+                        MongoConfig.collection
+                    )
+                }
+                Storage.dataStoreProviders += storage
+                Storage.defaultProvider = storage
             }
         }
         TestPAPI.register()

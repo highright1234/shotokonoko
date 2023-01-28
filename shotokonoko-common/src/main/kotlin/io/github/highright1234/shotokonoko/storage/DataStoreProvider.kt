@@ -18,6 +18,10 @@ abstract class DataStoreProvider<T : DataStore> {
 
     abstract fun getStore(name: String): T
 
+    open fun close() {
+        removeAllStoreCaches()
+    }
+
     protected fun registerManager(name: String, dataStore: T) {
         stores.getOrPut(name) { dataStore }
         launchStoreRemover(name)

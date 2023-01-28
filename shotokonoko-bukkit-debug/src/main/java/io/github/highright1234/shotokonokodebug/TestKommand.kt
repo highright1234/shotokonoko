@@ -1,5 +1,6 @@
 package io.github.highright1234.shotokonokodebug
 
+import com.github.shynixn.mccoroutine.bukkit.asyncDispatcher
 import com.github.shynixn.mccoroutine.bukkit.launch
 import io.github.highright1234.shotokonoko.Shotokonoko.plugin
 import io.github.highright1234.shotokonoko.bungee.BungeePlayer
@@ -8,6 +9,7 @@ import io.github.highright1234.shotokonoko.bungee.pluginmessage.BungeeUtil
 import io.github.highright1234.shotokonoko.collections.newPlayerArrayList
 import io.github.highright1234.shotokonoko.coroutine.CooldownAttribute
 import io.github.highright1234.shotokonoko.coroutine.mutableDelay
+import io.github.highright1234.shotokonoko.listener.listen
 import io.github.highright1234.shotokonoko.monun.suspendingExecutes
 import io.github.highright1234.shotokonoko.papi.ppapi
 import io.github.monun.kommand.PluginKommand
@@ -15,6 +17,7 @@ import kotlinx.coroutines.delay
 import net.kyori.adventure.text.Component.text
 import net.kyori.adventure.text.format.TextColor
 import org.bukkit.entity.Player
+import org.bukkit.event.player.PlayerTeleportEvent
 import java.lang.ref.WeakReference
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
@@ -23,7 +26,26 @@ import kotlin.reflect.jvm.isAccessible
 object TestKommand {
     private val coolDownAttribute = CooldownAttribute<Player>(5000L)
     fun register(pluginKommand: PluginKommand) {
+        pluginKommand.register("saveWorld") {
+            suspendingExecutes {
+                plugin.launch(plugin.asyncDispatcher) {
+                    player.world.save()
+                }
+            }
+        }
         pluginKommand.register("test") {
+            then("test") {
+                suspendingExecutes {
+                    plugin.launch {
+                        val event = player.listen<PlayerTeleportEvent>()
+                        player.sendMessage("올 ㅋㅋ")
+                    }
+                    // you must delay
+                    delay(1)
+                    @Suppress("MagicNumber")
+                    player.teleport(player.location.clone().apply { y += 10 })
+                }
+            }
             requires { isPlayer }
             suspendingExecutes {
                 coolDownAttribute.withCooldown(player) {

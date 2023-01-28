@@ -15,6 +15,6 @@ class DataStorePointer(val dataStore: DataStore, val key: String) {
         property: KProperty<*>,
         value: Any?
     ) {
-        dataStore.set(property.name, value)
+        dataStore.set(key, value)
     }
 }

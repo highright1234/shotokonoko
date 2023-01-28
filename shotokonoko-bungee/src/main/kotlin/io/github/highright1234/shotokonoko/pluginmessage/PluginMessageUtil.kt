@@ -10,6 +10,13 @@ import net.md_5.bungee.api.event.PluginMessageEvent
 import net.md_5.bungee.api.plugin.Listener
 import net.md_5.bungee.event.EventHandler
 
+fun Server.send(channel: MessageChannel, block: ByteArrayDataOutput.() -> Unit = {}) {
+    val bytes = PluginMessageUtil.bytes {
+        block()
+    }
+    sendData(channel.channel, bytes)
+}
+
 fun ProxiedPlayer.send(channel: MessageChannel, block: ByteArrayDataOutput.() -> Unit = {}) {
     val bytes = PluginMessageUtil.bytes {
         block()

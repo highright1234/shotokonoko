@@ -9,17 +9,16 @@ import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
 import com.mongodb.client.model.Filters.eq
 import io.github.highright1234.shotokonoko.storage.DataStoreProvider
-import io.github.highright1234.shotokonoko.storage.Storage
 import org.bson.Document
 import java.net.InetSocketAddress
 
-object MongoDataStoreProvider : DataStoreProvider<MongoDataStore>() {
+class MongoDataStoreProvider : DataStoreProvider<MongoDataStore>() {
 
     var mongoClient: MongoClient? = null
     var database: MongoDatabase? = null
     var collection: MongoCollection<Document>? = null
 
-    fun register(
+    fun start(
         address: InetSocketAddress, credential: MongoCredential,
         databaseName: String, collectionName: String
     ) {
@@ -36,9 +35,10 @@ object MongoDataStoreProvider : DataStoreProvider<MongoDataStore>() {
 
         database = mongoClient!!.getDatabase(databaseName)
         collection = database!!.getCollection(collectionName)
+    }
 
-        Storage.dataStoreProviders += this
-        Storage.defaultProvider = this
+    override fun close() {
+        mongoClient?.close()
     }
 
     override fun getStore(name: String): MongoDataStore {
@@ -49,7 +49,7 @@ object MongoDataStoreProvider : DataStoreProvider<MongoDataStore>() {
             Document("_id", name).also { collection!!.insertOne(it) }
         }
 
-        val dataStore = MongoDataStore(name)
+        val dataStore = MongoDataStore(this, name)
         stores[name] = dataStore
         launchStoreRemover(name)
 
