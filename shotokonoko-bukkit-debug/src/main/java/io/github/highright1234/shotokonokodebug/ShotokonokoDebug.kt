@@ -4,6 +4,8 @@ import com.github.shynixn.mccoroutine.bukkit.SuspendingJavaPlugin
 import com.github.shynixn.mccoroutine.bukkit.launch
 import com.mongodb.MongoCredential
 import com.outstandingboy.donationalert.entity.Donation
+import io.github.highright1234.shotokonoko.bungee.MessageChannel
+import io.github.highright1234.shotokonoko.bungee.pluginmessage.send
 import io.github.highright1234.shotokonoko.collections.newPlayerArrayList
 import io.github.highright1234.shotokonoko.listener.ChatScanner
 import io.github.highright1234.shotokonoko.listener.events
@@ -22,6 +24,7 @@ import java.net.InetSocketAddress
 
 @Suppress("Unused")
 class ShotokonokoDebug: SuspendingJavaPlugin() {
+    private val pluginMessageChannel = MessageChannel("shotokonoko-debug:test")
     private var donation: Donation? = null
     override suspend fun onEnableAsync() {
         DynamicLoader.load(
@@ -60,8 +63,24 @@ class ShotokonokoDebug: SuspendingJavaPlugin() {
             TestKommand.register(this)
             StorageTestKommand.register(this)
         }
+        pluginMessageChannel.registerOutgoing()
         launchPlayerGCChecker()
         launchPsycho()
+        launchPluginMessageTester()
+    }
+
+    private fun launchPluginMessageTester() = launch {
+        events<PlayerJoinEvent>().collect { event ->
+            println("sdfkjbsdfbjsdfjblsdf")
+            println(server.messenger.outgoingChannels)
+            println(server.messenger)
+            delay(1) // 몰랐는데 바로 못보냄
+            event.player.send(pluginMessageChannel) {
+                writeUTF("tasdfsdfljksdfbnsfd")
+                println("ㅇㅋㅋㅅㅋㅅ")
+            }
+            println("sended")
+        }
     }
 
     private fun launchPlayerGCChecker() = launch {

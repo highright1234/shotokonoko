@@ -10,9 +10,7 @@ import org.bukkit.plugin.messaging.PluginMessageListener
 
 fun Player.send(channel: MessageChannel, block: ByteArrayDataOutput.() -> Unit = {}) {
     channel.registerOutgoing()
-    val bytes = PluginMessageUtil.bytes {
-        block()
-    }
+    val bytes = PluginMessageUtil.bytes(block)
     sendPluginMessage(plugin, channel.channel, bytes)
 }
 
@@ -59,22 +57,45 @@ object PluginMessageUtil {
         return output.toByteArray()
     }
 
+    fun listenOnce(
+        messageChannel: MessageChannel,
+        subChannel: String?,
+        block: ByteArrayDataInput.(player: Player) -> Unit
+    ) {
+        lateinit var pluginMessageL: PluginMessageL
+        val runnable: ByteArrayDataInput.(player: Player) -> Unit = {
+            block(it)
+            plugin.server.messenger.unregisterIncomingPluginChannel(plugin, messageChannel.channel, pluginMessageL)
+        }
+        pluginMessageL = PluginMessageL(messageChannel, subChannel, runnable)
+        messageChannel.registerIncoming(pluginMessageL)
+    }
+
     fun listenOnce(messageChannel: MessageChannel, block: ByteArrayDataInput.(player: Player) -> Unit) {
         lateinit var pluginMessageL: PluginMessageL
         val runnable: ByteArrayDataInput.(player: Player) -> Unit = {
             block(it)
             plugin.server.messenger.unregisterIncomingPluginChannel(plugin, messageChannel.channel, pluginMessageL)
         }
-        pluginMessageL = PluginMessageL(messageChannel, runnable)
+        pluginMessageL = PluginMessageL(messageChannel, null, runnable)
         messageChannel.registerIncoming(pluginMessageL)
     }
 
+    fun listen(
+        messageChannel: MessageChannel,
+        subChannel: String?,
+        block: ByteArrayDataInput.(player: Player) -> Unit
+    ) {
+        messageChannel.registerIncoming(PluginMessageL(messageChannel, subChannel, block))
+    }
+
     fun listen(messageChannel: MessageChannel, block: ByteArrayDataInput.(player: Player) -> Unit) {
-        messageChannel.registerIncoming(PluginMessageL(messageChannel, block))
+        messageChannel.registerIncoming(PluginMessageL(messageChannel, null, block))
     }
 
     private class PluginMessageL(
         private val messageChannel: MessageChannel,
+        private val subChannel: String?,
         private val block: ByteArrayDataInput.(player: Player) -> Unit
     ): PluginMessageListener {
         override fun onPluginMessageReceived(channel: String, player: Player, message: ByteArray) {
@@ -83,6 +104,9 @@ object PluginMessageUtil {
             }
             @Suppress("UnstableApiUsage")
             val input: ByteArrayDataInput = ByteStreams.newDataInput(message)
+            subChannel?.let { subchan ->
+                if (input.readUTF() != subchan) return
+            }
             input.block(player)
         }
     }

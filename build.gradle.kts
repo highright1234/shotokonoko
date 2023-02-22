@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.util.capitalizeDecapitalize.capitalizeAsciiOnly
+
 plugins {
     kotlin("jvm") version Versions.KOTLIN
     id("org.jetbrains.dokka") version Versions.KOTLIN
@@ -6,7 +8,7 @@ plugins {
 
 
 group = "io.github.highright1234"
-version = "0.1.3"
+version = "0.1.4"
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
@@ -61,6 +63,58 @@ subprojects {
         } else if ("bungee" in project.name) {
             compileOnly("io.github.waterfallmc:waterfall-api:${Versions.MINECRAFT}-R0.1-SNAPSHOT")
         }
+    }
+    if ("debug" in project.name) {
+        tasks.register<Jar>("pluginsUpdate") {
+            var pluginName = rootProject.name.split("-").joinToString(separator = "") { it.capitalizeAsciiOnly() }
+            if ("debug" in project.name) pluginName += "Debug"
+            archiveBaseName.set(pluginName)
+            from(sourceSets["main"].output)
+            from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+            val serverDir = File(rootProject.rootDir, ".server")
+            doLast {
+                // 내 마크 서버 환경 불러오기
+                val serverFolder = File("E:\\.bungee\\")
+                if (!serverDir.exists() && serverFolder.exists()) {
+                    serverDir.mkdir()
+                    copy {
+                        from(serverFolder)
+                        include("**/**")
+                        into(serverDir)
+                    }
+                }
+                val bukkits = serverDir
+                    .listFiles()!!
+                    .filter { "server" in it.name }
+                val proxy = File(serverDir, "proxy")
+
+                val pluginsFolders: List<File> =
+                    if ("bukkit" in project.name) {
+                        bukkits.map { File(it, "plugins") }
+                    } else if ("bungee" in project.name) {
+                        File(proxy, "plugins").let(::listOf)
+                    } else {
+                        return@doLast
+                    }
+
+                pluginsFolders.forEach {
+                    copy {
+                        from(archiveFile)
+                        if (File(it, archiveFileName.get()).exists()) {
+                            File(it, archiveFileName.get()).delete()
+                        }
+                        into(it)
+                    }
+                }
+                pluginsFolders.forEach {
+                    // auto-reloader
+                    val updateFolder = File(it, "update")
+                    if (!updateFolder.exists()) return@doLast
+                    File(updateFolder, "RELOAD").delete()
+                }
+            }
+        }
+        tasks.named("build") { finalizedBy("pluginsUpdate") }
     }
 }
 

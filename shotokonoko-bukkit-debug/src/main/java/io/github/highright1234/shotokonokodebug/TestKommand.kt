@@ -9,6 +9,7 @@ import io.github.highright1234.shotokonoko.bungee.pluginmessage.BungeeUtil
 import io.github.highright1234.shotokonoko.collections.newPlayerArrayList
 import io.github.highright1234.shotokonoko.coroutine.CooldownAttribute
 import io.github.highright1234.shotokonoko.coroutine.mutableDelay
+import io.github.highright1234.shotokonoko.listener.ListeningUtil
 import io.github.highright1234.shotokonoko.listener.listen
 import io.github.highright1234.shotokonoko.monun.suspendingExecutes
 import io.github.highright1234.shotokonoko.papi.ppapi
@@ -42,6 +43,17 @@ object TestKommand {
                     }
                     // you must delay
                     delay(1)
+                    @Suppress("MagicNumber")
+                    player.teleport(player.location.clone().apply { y += 10 })
+                }
+            }
+            then("test2") {
+                suspendingExecutes {
+                    ListeningUtil.listener(
+                        PlayerTeleportEvent::class.java, filter =  { it.player == player }
+                    ) { event: PlayerTeleportEvent ->
+                        player.sendMessage("올 ㅋㅋ")
+                    }
                     @Suppress("MagicNumber")
                     player.teleport(player.location.clone().apply { y += 10 })
                 }

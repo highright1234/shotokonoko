@@ -5,4 +5,5 @@ version: 0.0.1
 softdepend:
   - PlaceholderAPI
 libraries:
-  - io.github.highright1234:shotokonoko-bungee:0.1.0
+  - io.github.highright1234:shotokonoko-bungee:0.1.4
+  - org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4

@@ -52,15 +52,18 @@ object PlatformManager {
         while (clazz != Any::class.java) {
             @Suppress("UNCHECKED_CAST")
             clazz.kotlin
-                .memberProperties
-                .find { it.name == name }
+                .memberFunctions
+                .find {
+                    @Suppress("DEPRECATION")
+                    it.name == "get${name.capitalize()}"
+                }
                 ?.let {
-                    return it.apply { isAccessible = true }.get(this@get) as T
+                    return it.apply { isAccessible = true }.call(this@get) as T
                 } ?: run {
                 clazz = clazz.superclass
             }
         }
-        error("Not found $name on ${clazz.name}")
+        error("Not found $name on ${this::class.java.name}")
     }
 
 //    private fun <T> Any.call(name: String, vararg arguments : Any?): T {

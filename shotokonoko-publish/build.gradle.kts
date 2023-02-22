@@ -34,9 +34,12 @@ publishStuff.forEach { platform ->
 publishing {
     repositories {
         mavenLocal()
-        maven {
-            name = "server"
-            url = rootProject.uri(".server/libraries")
+        val serverDir = File(rootProject.rootDir, ".server")
+        serverDir.listFiles()!!.forEach {
+            maven {
+                name = it.name
+                url = rootProject.uri(".server/${it.name}/libraries")
+            }
         }
         maven {
             name = "MavenCentral"

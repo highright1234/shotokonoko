@@ -9,6 +9,8 @@ import io.github.highright1234.shotokonoko.listener.events
 import io.github.highright1234.shotokonoko.listener.exception.PlayerQuitException
 import io.github.highright1234.shotokonoko.listener.listen
 import io.github.highright1234.shotokonoko.loader.DynamicLoader
+import io.github.highright1234.shotokonoko.pluginmessage.MessageChannel
+import io.github.highright1234.shotokonoko.pluginmessage.PluginMessageUtil
 import io.github.highright1234.shotokonoko.text
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
@@ -18,6 +20,7 @@ import net.md_5.bungee.api.event.PostLoginEvent
 @Suppress("Unused")
 class ShotokonokoDebug: SuspendingPlugin() {
     private var donation: Donation? = null
+    private val pluginMessageChannel = MessageChannel("shotokonoko-debug:test")
     override suspend fun onEnableAsync() {
         DynamicLoader.load(
             listOf("jitpack" to "https://jitpack.io"),
@@ -34,6 +37,11 @@ class ShotokonokoDebug: SuspendingPlugin() {
 
         launchPlayerGCChecker()
         launchPsycho()
+
+        pluginMessageChannel.init()
+        PluginMessageUtil.listen(pluginMessageChannel) {
+            logger.info("user: ${it.name}, data: ${readUTF()}")
+        }
     }
 
     private fun launchPlayerGCChecker() = launch {
@@ -53,9 +61,9 @@ class ShotokonokoDebug: SuspendingPlugin() {
 
         val event = withTimeoutOrNull(60000L) { listen<PostLoginEvent>() } ?: return@launch
         val player = event.player
-        player.sendMessage(text("채팅 아무거나 써보셈"))
+        player.sendMessage(text("채팅 아무거나 써보셈, 번지임"))
 
-        ChatScanner(player).await()
+        ChatScanner(player).await() // 다음 채팅에서는 singing 관련해서 오류나니 참고
             .onSuccess {
                 player.sendMessage(text(it + "라고 보냈구만"))
             }.onFailure {

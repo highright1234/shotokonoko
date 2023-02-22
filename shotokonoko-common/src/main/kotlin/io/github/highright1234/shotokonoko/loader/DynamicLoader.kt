@@ -16,6 +16,9 @@ import kotlin.reflect.KProperty
 
 object DynamicLoader {
 
+    // TODO deprecated 할까 생각중
+    // https://docs.papermc.io/paper/dev/getting-started/paper-plugins
+
     private val repository: RepositorySystem by LibraryLoaderField
     private val session: DefaultRepositorySystemSession by LibraryLoaderField
 

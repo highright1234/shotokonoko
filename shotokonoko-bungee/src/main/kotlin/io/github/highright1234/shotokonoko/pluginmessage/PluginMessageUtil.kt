@@ -60,6 +60,8 @@ fun ByteArrayDataInput.readVarInt(maxBytes: Int = 5): Int {
 
 object PluginMessageUtil {
 
+    private fun registerListener(listener: Listener) = plugin.proxy.pluginManager.registerListener(plugin, listener)
+
     fun bytes(block: ByteArrayDataOutput.() -> Unit): ByteArray {
         @Suppress("UnstableApiUsage")
         val output = ByteStreams.newDataOutput()
@@ -67,22 +69,46 @@ object PluginMessageUtil {
         return output.toByteArray()
     }
 
+    fun listenOnce(
+        messageChannel: MessageChannel,
+        subChannel: String?,
+        block: ByteArrayDataInput.(player: ProxiedPlayer) -> Unit
+    ) {
+        lateinit var pluginMessageL: PluginMessageL
+        val runnable: ByteArrayDataInput.(player: ProxiedPlayer) -> Unit = {
+            block(it)
+            plugin.proxy.pluginManager.unregisterListener(pluginMessageL)
+        }
+        pluginMessageL = PluginMessageL(messageChannel, subChannel, runnable)
+        registerListener(pluginMessageL)
+    }
+
+
     fun listenOnce(messageChannel: MessageChannel, block: ByteArrayDataInput.(player: ProxiedPlayer) -> Unit) {
         lateinit var pluginMessageL: PluginMessageL
         val runnable: ByteArrayDataInput.(player: ProxiedPlayer) -> Unit = {
             block(it)
             plugin.proxy.pluginManager.unregisterListener(pluginMessageL)
         }
-        pluginMessageL = PluginMessageL(messageChannel, runnable)
-        messageChannel.registerIncoming(pluginMessageL)
+        pluginMessageL = PluginMessageL(messageChannel, null, runnable)
+        registerListener(pluginMessageL)
+    }
+
+    fun listen(
+        messageChannel: MessageChannel,
+        subChannel: String?,
+        block: ByteArrayDataInput.(player: ProxiedPlayer) -> Unit
+    ) {
+        registerListener(PluginMessageL(messageChannel, subChannel, block))
     }
 
     fun listen(messageChannel: MessageChannel, block: ByteArrayDataInput.(player: ProxiedPlayer) -> Unit) {
-        messageChannel.registerIncoming(PluginMessageL(messageChannel, block))
+        registerListener(PluginMessageL(messageChannel, null, block))
     }
 
-    private class PluginMessageL(
+    class PluginMessageL(
         private val messageChannel: MessageChannel,
+        private val subChannel: String?,
         private val block: ByteArrayDataInput.(player: ProxiedPlayer) -> Unit
     ): Listener {
         @EventHandler
@@ -90,6 +116,9 @@ object PluginMessageUtil {
             if (tag != messageChannel.channel || sender !is Server || receiver !is ProxiedPlayer) return
             @Suppress("UnstableApiUsage")
             val input: ByteArrayDataInput = ByteStreams.newDataInput(data)
+            subChannel?.let { subchan ->
+                if (input.readUTF() != subchan) return
+            }
             input.block(receiver as ProxiedPlayer)
         }
     }

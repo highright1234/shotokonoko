@@ -3,7 +3,6 @@ package io.github.highright1234.shotokonoko.listener
 import com.github.shynixn.mccoroutine.bungeecord.launch
 import io.github.highright1234.shotokonoko.Shotokonoko.plugin
 import io.github.highright1234.shotokonoko.listener.exception.PlayerQuitException
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -18,29 +17,52 @@ import net.md_5.bungee.event.EventHandler
 import net.md_5.bungee.event.EventPriority
 import java.lang.reflect.Modifier
 import java.util.*
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
 @Suppress("unused")
 object ListeningUtil {
 
-    suspend fun <T : Event> listener(
+    fun <T: Event> listener(
+        clazz: Class<T>,
+        priority: Byte = EventPriority.NORMAL,
+        ignoreCancelled: Boolean = false,
+        filter: (T) -> Boolean = { true },
+        block: (T) -> Unit,
+    ) {
+
+        lateinit var listener: Listener
+        listener = object: Any() {
+            fun on(event: T) {
+                if (event is Cancellable && event.isCancelled && ignoreCancelled) return
+                if (!filter(event)) return
+                block(event)
+                plugin.proxy.pluginManager.unregisterListener(listener)
+            }
+        }.let { newListener(clazz, priority, it) }
+
+    }
+
+    fun <T : Event> listener(
         player: ProxiedPlayer,
         clazz: Class<T>,
         priority: Byte = EventPriority.NORMAL,
         ignoreCancelled: Boolean = false,
         filter: (T) -> Boolean = { true },
-    ): Result<T> {
-        val completableDeferred = CompletableDeferred<Result<T>>()
-
+        block: (Result<T>) -> Unit,
+    ) {
         lateinit var listener: Listener
         lateinit var exitListener: Listener
 
         listener = object: Any() {
             fun on(event: T) {
+                println("으응.......")
                 if (event is Cancellable && event.isCancelled && ignoreCancelled) return
                 if (filter(event) && event.safePlayer == player) {
-                    completableDeferred.complete(Result.success(event))
+                    println("응애")
+                    block(Result.success(event))
                     plugin.proxy.pluginManager.unregisterListener(listener)
                     plugin.proxy.pluginManager.unregisterListener(exitListener)
                 }
@@ -51,13 +73,26 @@ object ListeningUtil {
         exitListener = object: Listener {
             fun on(event: PlayerDisconnectEvent) {
                 if (player != event.player) return
-                completableDeferred.complete(Result.failure(PlayerQuitException()))
+                block(Result.failure(PlayerQuitException()))
                 plugin.proxy.pluginManager.unregisterListener(listener)
                 plugin.proxy.pluginManager.unregisterListener(exitListener)
             }
         }.let { newListener(PlayerDisconnectEvent::class.java, EventPriority.HIGHEST, it) }
 
-        return completableDeferred.await()
+    }
+
+    suspend fun <T : Event> listener(
+        player: ProxiedPlayer,
+        clazz: Class<T>,
+        priority: Byte = EventPriority.NORMAL,
+        ignoreCancelled: Boolean = false,
+        filter: (T) -> Boolean = { true },
+    ): Result<T> {
+        return suspendCoroutine { continuation ->
+            listener(player, clazz, priority, ignoreCancelled, filter) {
+                continuation.resume(it)
+            }
+        }
     }
 
     // 플레이어 데스 이벤트같은거는 EntityEvent 임
@@ -75,18 +110,11 @@ object ListeningUtil {
         ignoreCancelled: Boolean = false,
         filter: (T) -> Boolean = { true },
     ): T {
-        val completableDeferred = CompletableDeferred<T>()
-        lateinit var listener: Listener
-        listener = object: Any() {
-            fun on(event: T) {
-                if (event is Cancellable && event.isCancelled && ignoreCancelled) return
-                if (!filter(event)) return
-                completableDeferred.complete(event)
-                plugin.proxy.pluginManager.unregisterListener(listener)
+        return suspendCoroutine { continuation ->
+            listener(clazz, priority, ignoreCancelled, filter) {
+                continuation.resume(it)
             }
-        }.let { newListener(clazz, priority, it) }
-
-        return completableDeferred.await()
+        }
     }
 
     fun <T : Event> listenEvents(
@@ -110,6 +138,7 @@ object ListeningUtil {
     private fun newListener(clazz: Class<out Event>, priority: Byte, interceptor: Any): Listener {
         return ByteBuddy()
             .subclass(Listener::class.java)
+            .modifiers(Modifier.PUBLIC)
             .defineMethod("on", Void.TYPE, Modifier.PUBLIC)
             .withParameters(clazz)
             .intercept(MethodDelegation.to(interceptor))

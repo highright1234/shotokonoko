@@ -6,6 +6,9 @@ import kotlinx.coroutines.withContext
 fun mutableDelay(timeMillis: Long) = MutableDelayData(System.currentTimeMillis() + timeMillis)
 
 class MutableDelayData(whenEnd: Long) {
+
+    // TODO 한곳에서 MutableDelayData 가지고 callback 사용해서 비용 줄이기
+
     // time millis
     var timeToRun = whenEnd
     val isActive: Boolean get() = System.currentTimeMillis() <= timeToRun

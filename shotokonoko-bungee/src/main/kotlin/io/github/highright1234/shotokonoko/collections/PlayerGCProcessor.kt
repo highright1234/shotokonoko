@@ -32,7 +32,7 @@ internal object PlayerGCProcessor {
         targetMaps += WeakReference(map)
     }
 
-    private object QuitL : Listener {
+    internal object QuitL : Listener { // 자바상에서 public 이여야 함
         @EventHandler(priority = EventPriority.HIGHEST)
         fun PlayerDisconnectEvent.on() {
             targetCollections.toList().forEach {

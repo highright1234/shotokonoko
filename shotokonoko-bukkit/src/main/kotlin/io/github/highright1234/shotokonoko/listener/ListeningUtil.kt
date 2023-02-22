@@ -3,7 +3,6 @@ package io.github.highright1234.shotokonoko.listener
 import com.github.shynixn.mccoroutine.bukkit.launch
 import io.github.highright1234.shotokonoko.Shotokonoko.plugin
 import io.github.highright1234.shotokonoko.listener.exception.PlayerQuitException
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -16,25 +15,27 @@ import org.bukkit.event.player.PlayerEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.EventExecutor
 import java.util.*
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 
 object ListeningUtil {
 
-    suspend fun <T : Event> listener(
+    fun <T : Event> listener(
         player: Player,
         clazz: Class<T>,
         priority: EventPriority = EventPriority.NORMAL,
         ignoreCancelled: Boolean = false,
         filter: (T) -> Boolean = { true },
-    ): Result<T> {
+        block: (Result<T>) -> Unit,
+    ) {
         val exitListener = object: Listener {  }
         val listener = object: Listener {  }
-        val completableDeferred = CompletableDeferred<Result<T>>()
         plugin.server.pluginManager.registerEvent(clazz, listener, priority, { _, event ->
             @Suppress("UNCHECKED_CAST")
             if (filter(event as T) && event.safePlayer == player) {
-                completableDeferred.complete(Result.success(event))
+                block(Result.success(event))
                 HandlerList.unregisterAll(listener)
                 HandlerList.unregisterAll(exitListener)
             }
@@ -42,7 +43,7 @@ object ListeningUtil {
         val eventExecuter = EventExecutor { _, event ->
             event as PlayerQuitEvent
             if (player != event.player) return@EventExecutor
-            completableDeferred.complete(Result.failure(PlayerQuitException()))
+            block(Result.failure(PlayerQuitException()))
             HandlerList.unregisterAll(listener)
             HandlerList.unregisterAll(exitListener)
         }
@@ -54,7 +55,20 @@ object ListeningUtil {
             plugin, ignoreCancelled
         )
 
-        return completableDeferred.await()
+    }
+
+    suspend fun <T : Event> listener(
+        player: Player,
+        clazz: Class<T>,
+        priority: EventPriority = EventPriority.NORMAL,
+        ignoreCancelled: Boolean = false,
+        filter: (T) -> Boolean = { true },
+    ): Result<T> {
+        return suspendCoroutine { continuation ->
+            listener(player, clazz, priority, ignoreCancelled, filter) {
+                continuation.resume(it)
+            }
+        }
     }
 
     // 플레이어 데스 이벤트같은거는 EntityEvent 임
@@ -71,18 +85,18 @@ object ListeningUtil {
             return getter?.get(this)
         }
 
-    suspend fun <T: Event> listener(
+    fun <T: Event> listener(
         clazz: Class<T>,
         priority: EventPriority = EventPriority.NORMAL,
         ignoreCancelled: Boolean = false,
         filter: (T) -> Boolean = { true },
-    ): T {
+        block: (event: T) -> Unit,
+    ) {
         val listener = object: Listener {  }
-        val completableDeferred = CompletableDeferred<T>()
         val eventExecutor = EventExecutor { _, event ->
             @Suppress("UNCHECKED_CAST")
             if (filter(event as T)) {
-                completableDeferred.complete(event)
+                block(event)
                 HandlerList.unregisterAll(listener)
             }
         }
@@ -94,7 +108,19 @@ object ListeningUtil {
             plugin,
             ignoreCancelled
         )
-        return completableDeferred.await()
+    }
+
+    suspend fun <T: Event> listener(
+        clazz: Class<T>,
+        priority: EventPriority = EventPriority.NORMAL,
+        ignoreCancelled: Boolean = false,
+        filter: (T) -> Boolean = { true },
+    ): T {
+        return suspendCoroutine { continuation ->
+            listener(clazz, priority, ignoreCancelled, filter) {
+                continuation.resume(it)
+            }
+        }
     }
 
     fun <T : Event> listenEvents(
