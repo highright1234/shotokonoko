@@ -58,10 +58,8 @@ object ListeningUtil {
 
         listener = object: Any() {
             fun on(event: T) {
-                println("으응.......")
                 if (event is Cancellable && event.isCancelled && ignoreCancelled) return
                 if (filter(event) && event.safePlayer == player) {
-                    println("응애")
                     block(Result.success(event))
                     plugin.proxy.pluginManager.unregisterListener(listener)
                     plugin.proxy.pluginManager.unregisterListener(exitListener)

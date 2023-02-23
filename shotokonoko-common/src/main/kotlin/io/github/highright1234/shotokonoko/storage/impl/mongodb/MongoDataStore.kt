@@ -30,8 +30,7 @@ class MongoDataStore internal constructor(private val provider: MongoDataStorePr
 
     override fun <T> get(key: String, clazz: Class<T>): T? {
         return collection.find(filter).first()!![key]?.let {
-
-            if (it is Document) return gson.fromJson(it.toJson().also(::println), clazz)
+            if (it is Document) return gson.fromJson(it.toJson(), clazz)
             @Suppress("UNCHECKED_CAST")
             it as T
         }
