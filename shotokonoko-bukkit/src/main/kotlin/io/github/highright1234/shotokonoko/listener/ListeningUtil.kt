@@ -29,7 +29,7 @@ object ListeningUtil {
         ignoreCancelled: Boolean = false,
         filter: (T) -> Boolean = { true },
         block: (Result<T>) -> Unit,
-    ) {
+    ): Listener {
         val exitListener = object: Listener {  }
         val listener = object: Listener {  }
         plugin.server.pluginManager.registerEvent(clazz, listener, priority, { _, event ->
@@ -50,11 +50,12 @@ object ListeningUtil {
         plugin.server.pluginManager.registerEvent(
             PlayerQuitEvent::class.java,
             exitListener,
-            EventPriority.NORMAL,
+            EventPriority.HIGHEST,
             eventExecuter,
             plugin, ignoreCancelled
         )
 
+        return listener
     }
 
     suspend fun <T : Event> listener(
@@ -91,7 +92,7 @@ object ListeningUtil {
         ignoreCancelled: Boolean = false,
         filter: (T) -> Boolean = { true },
         block: (event: T) -> Unit,
-    ) {
+    ): Listener {
         val listener = object: Listener {  }
         val eventExecutor = EventExecutor { _, event ->
             @Suppress("UNCHECKED_CAST")
@@ -108,6 +109,7 @@ object ListeningUtil {
             plugin,
             ignoreCancelled
         )
+        return listener
     }
 
     suspend fun <T: Event> listener(

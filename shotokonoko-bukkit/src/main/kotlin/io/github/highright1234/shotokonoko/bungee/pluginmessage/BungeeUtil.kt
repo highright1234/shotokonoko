@@ -7,6 +7,7 @@ import io.github.highright1234.shotokonoko.bungee.BungeePlayer
 import io.github.highright1234.shotokonoko.bungee.BungeeServer
 import io.github.highright1234.shotokonoko.bungee.MessageChannel
 import io.github.highright1234.shotokonoko.bungee.pluginmessage.PluginMessageUtil.bytes
+import io.github.highright1234.shotokonoko.bungee.pluginmessage.PluginMessageUtil.listen
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import net.kyori.adventure.text.Component
@@ -150,12 +151,13 @@ object BungeeUtil {
         write(bytes)
     }
 
-    fun forwardToPlayer(player: BungeePlayer, channel: MessageChannel, bytes: ByteArray) = send(Subchannels.FORWARD_TO_PLAYER) {
-        writeUTF(player.name)
-        writeUTF(channel.channel)
-        writeShort(bytes.size)
-        write(bytes)
-    }
+    fun forwardToPlayer(player: BungeePlayer, channel: MessageChannel, bytes: ByteArray) =
+        send(Subchannels.FORWARD_TO_PLAYER) {
+            writeUTF(player.name)
+            writeUTF(channel.channel)
+            writeShort(bytes.size)
+            write(bytes)
+        }
 
     fun uuid(player: Player): Deferred<UUID> = bungee(Subchannels.UUID) {
         player.send(it)
@@ -184,21 +186,22 @@ object BungeeUtil {
 
     fun kickPlayer(player: BungeePlayer) = send(Subchannels.KICK_PLAYER) { writeUTF(player.name) }
 
-    val isBungee: Boolean get() {
-        val server = plugin.server
-        val isBungee = server.spigot().spigotConfig.getBoolean("settings.bungeecord")
-        val isVelocity: Boolean = if (server.minecraftVersion.split(".")[1].toInt() <= 18) {
-            server.spigot().paperConfig.getBoolean("settings.velocity-support.enabled")
-        } else {
-            server.spigot().paperConfig.getBoolean("proxies.velocity.enabled")
+    val isBungee: Boolean
+        get() {
+            val server = plugin.server
+            val isBungee = server.spigot().spigotConfig.getBoolean("settings.bungeecord")
+            val isVelocity: Boolean = if (server.minecraftVersion.split(".")[1].toInt() <= 18) {
+                server.spigot().paperConfig.getBoolean("settings.velocity-support.enabled")
+            } else {
+                server.spigot().paperConfig.getBoolean("proxies.velocity.enabled")
+            }
+            require((!isBungee && !isVelocity) || isBungee != isVelocity) {
+                "Only one of the bungeecord settings and the velocity setting must be on."
+            }
+            return isBungee || isVelocity
         }
-        require((!isBungee && !isVelocity) || isBungee != isVelocity) {
-            "Only one of the bungeecord settings and the velocity setting must be on."
-        }
-        return isBungee || isVelocity
-    }
 
-    private fun registerResponseListener() = PluginMessageUtil.listen(MessageChannel("BungeeCord")) {
+    private fun registerResponseListener() = listen(MessageChannel("BungeeCord"), null) {
         val identifierGroup = Subchannels.run {
             listOf(
                 IP_OTHER,

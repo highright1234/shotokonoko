@@ -4,8 +4,10 @@ import com.google.common.io.ByteArrayDataInput
 import com.google.common.io.ByteArrayDataOutput
 import com.google.common.io.ByteStreams
 import io.github.highright1234.shotokonoko.Shotokonoko.plugin
+import io.github.highright1234.shotokonoko.listener.ListeningUtil
 import net.md_5.bungee.api.connection.ProxiedPlayer
 import net.md_5.bungee.api.connection.Server
+import net.md_5.bungee.api.event.PlayerDisconnectEvent
 import net.md_5.bungee.api.event.PluginMessageEvent
 import net.md_5.bungee.api.plugin.Listener
 import net.md_5.bungee.event.EventHandler
@@ -61,6 +63,7 @@ fun ByteArrayDataInput.readVarInt(maxBytes: Int = 5): Int {
 object PluginMessageUtil {
 
     private fun registerListener(listener: Listener) = plugin.proxy.pluginManager.registerListener(plugin, listener)
+    private fun unregisterListener(listener: Listener) = plugin.proxy.pluginManager.unregisterListener(listener)
 
     fun bytes(block: ByteArrayDataOutput.() -> Unit): ByteArray {
         @Suppress("UnstableApiUsage")
@@ -68,6 +71,50 @@ object PluginMessageUtil {
         output.block()
         return output.toByteArray()
     }
+
+    fun listenOnce( // 플레이어 나가는건 알아서 확인해야함
+        player: ProxiedPlayer,
+        messageChannel: MessageChannel,
+        subChannel: String?,
+        filter: ByteArrayDataInput.(player: ProxiedPlayer) -> Boolean,
+        block: ByteArrayDataInput.(player: ProxiedPlayer) -> Unit
+    ) {
+        lateinit var pluginMessageL: PluginMessageL
+        lateinit var listener: Listener
+        val runnable: ByteArrayDataInput.(player: ProxiedPlayer) -> Unit = {
+            block(it)
+            unregisterListener(pluginMessageL)
+            unregisterListener(listener)
+        }
+        listener = ListeningUtil.listener(PlayerDisconnectEvent::class.java, filter = { it.player == player }) {
+            unregisterListener(pluginMessageL)
+            unregisterListener(listener)
+        }
+        val checker: ByteArrayDataInput.(player: ProxiedPlayer) -> Boolean = { sender ->
+            ( if (subChannel != null) subChannel != readUTF() else true ) && player == sender && filter(player)
+        }
+        pluginMessageL = PluginMessageL(messageChannel, subChannel, checker, runnable)
+        registerListener(pluginMessageL)
+    }
+
+    fun listenOnce(
+        messageChannel: MessageChannel,
+        subChannel: String?,
+        filter: ByteArrayDataInput.(player: ProxiedPlayer) -> Boolean,
+        block: ByteArrayDataInput.(player: ProxiedPlayer) -> Unit
+    ) {
+        lateinit var pluginMessageL: PluginMessageL
+        val runnable: ByteArrayDataInput.(player: ProxiedPlayer) -> Unit = {
+            block(it)
+            unregisterListener(pluginMessageL)
+        }
+        val checker: ByteArrayDataInput.(player: ProxiedPlayer) -> Boolean = {
+            (if (subChannel != null) subChannel != readUTF() else true) && filter(it)
+        }
+        pluginMessageL = PluginMessageL(messageChannel, subChannel, checker, runnable)
+        registerListener(pluginMessageL)
+    }
+
 
     fun listenOnce(
         messageChannel: MessageChannel,
@@ -109,8 +156,14 @@ object PluginMessageUtil {
     class PluginMessageL(
         private val messageChannel: MessageChannel,
         private val subChannel: String?,
+        private val filter: ByteArrayDataInput.(player: ProxiedPlayer) -> Boolean = { true },
         private val block: ByteArrayDataInput.(player: ProxiedPlayer) -> Unit
     ): Listener {
+        constructor(
+            messageChannel: MessageChannel,
+            subChannel: String?,
+            block: ByteArrayDataInput.(player: ProxiedPlayer) -> Unit
+        ): this(messageChannel, subChannel, { true }, block)
         @EventHandler
         fun PluginMessageEvent.on() {
             if (tag != messageChannel.channel || sender !is Server || receiver !is ProxiedPlayer) return

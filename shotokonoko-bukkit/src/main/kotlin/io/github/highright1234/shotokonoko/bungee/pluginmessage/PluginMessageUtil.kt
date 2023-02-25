@@ -5,7 +5,11 @@ import com.google.common.io.ByteArrayDataOutput
 import com.google.common.io.ByteStreams
 import io.github.highright1234.shotokonoko.Shotokonoko.plugin
 import io.github.highright1234.shotokonoko.bungee.MessageChannel
+import io.github.highright1234.shotokonoko.listener.ListeningUtil
 import org.bukkit.entity.Player
+import org.bukkit.event.HandlerList
+import org.bukkit.event.Listener
+import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.messaging.PluginMessageListener
 
 fun Player.send(channel: MessageChannel, block: ByteArrayDataOutput.() -> Unit = {}) {
@@ -57,6 +61,49 @@ object PluginMessageUtil {
         return output.toByteArray()
     }
 
+    fun listenOnce( // 플레이어 나가는건 알아서 확인해야함
+        player: Player,
+        messageChannel: MessageChannel,
+        subChannel: String?,
+        filter: ByteArrayDataInput.(player: Player) -> Boolean,
+        block: ByteArrayDataInput.(player: Player) -> Unit
+    ) {
+        lateinit var pluginMessageL: PluginMessageL
+        lateinit var listener: Listener
+        val runnable: ByteArrayDataInput.(player: Player) -> Unit = {
+            block(it)
+            plugin.server.messenger.unregisterIncomingPluginChannel(plugin, messageChannel.channel, pluginMessageL)
+            HandlerList.unregisterAll(listener)
+        }
+        listener = ListeningUtil.listener(PlayerQuitEvent::class.java, filter = { it.player == player }) {
+            plugin.server.messenger.unregisterIncomingPluginChannel(plugin, messageChannel.channel, pluginMessageL)
+            HandlerList.unregisterAll(listener)
+        }
+        val checker: ByteArrayDataInput.(player: Player) -> Boolean = { sender ->
+            ( if (subChannel != null) subChannel != readUTF() else true ) && player == sender && filter(player)
+        }
+        pluginMessageL = PluginMessageL(messageChannel, subChannel, checker, runnable)
+        messageChannel.registerIncoming(pluginMessageL)
+    }
+
+    fun listenOnce(
+        messageChannel: MessageChannel,
+        subChannel: String?,
+        filter: ByteArrayDataInput.(player: Player) -> Boolean,
+        block: ByteArrayDataInput.(player: Player) -> Unit
+    ) {
+        lateinit var pluginMessageL: PluginMessageL
+        val runnable: ByteArrayDataInput.(player: Player) -> Unit = {
+            block(it)
+            plugin.server.messenger.unregisterIncomingPluginChannel(plugin, messageChannel.channel, pluginMessageL)
+        }
+        val checker: ByteArrayDataInput.(player: Player) -> Boolean = {
+            (if (subChannel != null) subChannel != readUTF() else true) && filter(it)
+        }
+        pluginMessageL = PluginMessageL(messageChannel, subChannel, checker, runnable)
+        messageChannel.registerIncoming(pluginMessageL)
+    }
+
     fun listenOnce(
         messageChannel: MessageChannel,
         subChannel: String?,
@@ -89,20 +136,28 @@ object PluginMessageUtil {
         messageChannel.registerIncoming(PluginMessageL(messageChannel, subChannel, block))
     }
 
+    @Deprecated(message = "deprecated", replaceWith = ReplaceWith("listen(messageChannel, null, block)"))
     fun listen(messageChannel: MessageChannel, block: ByteArrayDataInput.(player: Player) -> Unit) {
-        messageChannel.registerIncoming(PluginMessageL(messageChannel, null, block))
+        listen(messageChannel, null, block)
     }
 
+    @Suppress("UnstableApiUsage")
     private class PluginMessageL(
         private val messageChannel: MessageChannel,
         private val subChannel: String?,
+        private val filter: ByteArrayDataInput.(player: Player) -> Boolean = { true },
         private val block: ByteArrayDataInput.(player: Player) -> Unit
     ): PluginMessageListener {
+        constructor(
+            messageChannel: MessageChannel,
+            subChannel: String?,
+            block: ByteArrayDataInput.(player: Player) -> Unit
+        ): this(messageChannel, subChannel, { true }, block)
         override fun onPluginMessageReceived(channel: String, player: Player, message: ByteArray) {
             if (channel != messageChannel.channel) {
                 return
             }
-            @Suppress("UnstableApiUsage")
+            if (!filter(ByteStreams.newDataInput(message), player)) return
             val input: ByteArrayDataInput = ByteStreams.newDataInput(message)
             subChannel?.let { subchan ->
                 if (input.readUTF() != subchan) return

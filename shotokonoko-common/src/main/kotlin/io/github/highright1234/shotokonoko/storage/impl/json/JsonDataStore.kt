@@ -13,7 +13,7 @@ class JsonDataStore internal constructor(private val file: File) : DataStore {
             .create()
     }
 
-    private lateinit var json: JsonObject
+    lateinit var json: JsonObject
 
     init {
         reload()
@@ -36,7 +36,10 @@ class JsonDataStore internal constructor(private val file: File) : DataStore {
     }
 
     override fun reload() {
-        if(!file.exists()) file.writeText("{}")
+        if(!file.exists()) {
+            file.createNewFile()
+            file.writeText("{}")
+        }
         json = JsonParser.parseString(file.readText()).asJsonObject
     }
 

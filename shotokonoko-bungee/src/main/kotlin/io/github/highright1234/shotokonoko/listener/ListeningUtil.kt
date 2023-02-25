@@ -31,7 +31,7 @@ object ListeningUtil {
         ignoreCancelled: Boolean = false,
         filter: (T) -> Boolean = { true },
         block: (T) -> Unit,
-    ) {
+    ): Listener {
 
         lateinit var listener: Listener
         listener = object: Any() {
@@ -43,6 +43,7 @@ object ListeningUtil {
             }
         }.let { newListener(clazz, priority, it) }
 
+        return listener
     }
 
     fun <T : Event> listener(
@@ -52,7 +53,7 @@ object ListeningUtil {
         ignoreCancelled: Boolean = false,
         filter: (T) -> Boolean = { true },
         block: (Result<T>) -> Unit,
-    ) {
+    ): Listener {
         lateinit var listener: Listener
         lateinit var exitListener: Listener
 
@@ -77,6 +78,7 @@ object ListeningUtil {
             }
         }.let { newListener(PlayerDisconnectEvent::class.java, EventPriority.HIGHEST, it) }
 
+        return listener
     }
 
     suspend fun <T : Event> listener(
@@ -134,7 +136,7 @@ object ListeningUtil {
     }
 
     private fun newListener(clazz: Class<out Event>, priority: Byte, interceptor: Any): Listener {
-        return ByteBuddy()
+        return ByteBuddy() // TODO 캐쉬 기능
             .subclass(Listener::class.java)
             .modifiers(Modifier.PUBLIC)
             .defineMethod("on", Void.TYPE, Modifier.PUBLIC)
