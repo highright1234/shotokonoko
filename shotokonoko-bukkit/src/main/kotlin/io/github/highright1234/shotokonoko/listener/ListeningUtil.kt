@@ -19,6 +19,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.isAccessible
 
 object ListeningUtil {
 
@@ -83,7 +84,7 @@ object ListeningUtil {
             @Suppress("UNCHECKED_CAST")
             val getter = this::class.memberProperties
                 .find { it.name == "player" } as KProperty1<Event, Player>?
-            return getter?.get(this)
+            return getter?.apply { isAccessible = true }?.get(this)
         }
 
     fun <T: Event> listener(
