@@ -49,6 +49,8 @@ fun FakeEntityServer.init(predicate: ((player: Player) -> Boolean) = { true }) {
 
 fun ConfigSupport.load(target: Any, file: File) {
     val resourcePath: String = file.toString().removePrefix(plugin.dataFolder.toString())
+        .removePrefix("/")
+        .removePrefix("\\")
     if (!file.exists()) {
         plugin.saveResource(resourcePath, false)
     }
