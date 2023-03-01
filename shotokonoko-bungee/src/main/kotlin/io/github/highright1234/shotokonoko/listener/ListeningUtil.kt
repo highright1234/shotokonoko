@@ -6,6 +6,7 @@ import io.github.highright1234.shotokonoko.listener.exception.PlayerQuitExceptio
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
 import net.bytebuddy.ByteBuddy
 import net.bytebuddy.implementation.MethodDelegation
 import net.md_5.bungee.api.connection.ProxiedPlayer
@@ -17,14 +18,18 @@ import net.md_5.bungee.event.EventHandler
 import net.md_5.bungee.event.EventPriority
 import java.lang.reflect.Modifier
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
-import kotlin.reflect.KProperty1
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.jvm.isAccessible
 
 @Suppress("unused")
 object ListeningUtil {
+
+    // 바이트코드 여러번 만드는거 방지용 TODO
+    private val listeners: ConcurrentHashMap<Class<*>, Class<*>> = ConcurrentHashMap()
+
+    private fun registerListener(listener: Listener) = plugin.proxy.pluginManager.registerListener(plugin, listener)
+    private fun unregisterListener(listener : Listener) = plugin.proxy.pluginManager.unregisterListener(listener)
+
 
     fun <T: Event> listener(
         clazz: Class<T>,
@@ -34,13 +39,14 @@ object ListeningUtil {
         block: (T) -> Unit,
     ): Listener {
 
+
         lateinit var listener: Listener
         listener = object: Any() {
             fun on(event: T) {
                 if (event is Cancellable && event.isCancelled && ignoreCancelled) return
                 if (!filter(event)) return
                 block(event)
-                plugin.proxy.pluginManager.unregisterListener(listener)
+                unregisterListener(listener)
             }
         }.let { newListener(clazz, priority, it) }
 
@@ -57,28 +63,21 @@ object ListeningUtil {
     ): Listener {
 
         lateinit var listener: Listener
-        lateinit var exitListener: Listener
+        lateinit var quitListener: Listener
 
         listener = object: Any() {
             fun on(event: T) {
                 if (event is Cancellable && event.isCancelled && ignoreCancelled) return
                 if (filter(event) && event.safePlayer == player) {
                     block(Result.success(event))
-                    plugin.proxy.pluginManager.unregisterListener(listener)
-                    plugin.proxy.pluginManager.unregisterListener(exitListener)
+                    unregisterListener(listener)
+                    unregisterListener(quitListener)
                 }
             }
         }.let { newListener(clazz, priority, it) }
 
-
-        exitListener = object: Listener {
-            fun on(event: PlayerDisconnectEvent) {
-                if (player != event.player) return
-                block(Result.failure(PlayerQuitException()))
-                plugin.proxy.pluginManager.unregisterListener(listener)
-                plugin.proxy.pluginManager.unregisterListener(exitListener)
-            }
-        }.let { newListener(PlayerDisconnectEvent::class.java, EventPriority.HIGHEST, it) }
+        quitListener = PlayerQuitL(player, listener, block)
+            .also { registerListener(it) }
 
         return listener
     }
@@ -90,9 +89,12 @@ object ListeningUtil {
         ignoreCancelled: Boolean = false,
         filter: (T) -> Boolean = { true },
     ): Result<T> {
-        return suspendCoroutine { continuation ->
-            listener(player, clazz, priority, ignoreCancelled, filter) {
+        return suspendCancellableCoroutine { continuation ->
+            val listener = listener(player, clazz, priority, ignoreCancelled, filter) {
                 continuation.resume(it)
+            }
+            continuation.invokeOnCancellation {
+                unregisterListener(listener)
             }
         }
     }
@@ -100,10 +102,13 @@ object ListeningUtil {
     // 플레이어 데스 이벤트같은거는 EntityEvent 임
     private val Event.safePlayer: ProxiedPlayer?
         get() {
-            @Suppress("UNCHECKED_CAST")
-            val getter = this::class.memberProperties
-                .find { it.name == "player" } as KProperty1<Event, ProxiedPlayer>?
-            return getter?.apply { isAccessible = true }?.get(this)
+
+            val getter = this::class.java.methods
+                .find { it.name == "getPlayer" }
+            val field = this::class.java.declaredFields
+                .find { it.name == "player" }
+
+            return (getter?.invoke(this) ?: field?.apply { isAccessible = true }?.get(this)) as? ProxiedPlayer
         }
 
     suspend fun <T: Event> listener(
@@ -112,9 +117,12 @@ object ListeningUtil {
         ignoreCancelled: Boolean = false,
         filter: (T) -> Boolean = { true },
     ): T {
-        return suspendCoroutine { continuation ->
-            listener(clazz, priority, ignoreCancelled, filter) {
+        return suspendCancellableCoroutine { continuation ->
+            val listener = listener(clazz, priority, ignoreCancelled, filter) {
                 continuation.resume(it)
+            }
+            continuation.invokeOnCancellation {
+                unregisterListener(listener)
             }
         }
     }
@@ -149,6 +157,21 @@ object ListeningUtil {
             .load(javaClass.classLoader)
             .loaded.getConstructor().newInstance()
             .also { plugin.proxy.pluginManager.registerListener(plugin, it) }
+    }
+
+
+    internal class PlayerQuitL<T>(
+        private val player: ProxiedPlayer,
+        private val listener: Listener,
+        private val block: (Result<T>) -> Unit
+    ): Listener {
+        @EventHandler(priority = EventPriority.HIGHEST)
+        fun on(event: PlayerDisconnectEvent) {
+            if (player != event.player) return
+            block(Result.failure(PlayerQuitException()))
+            plugin.proxy.pluginManager.unregisterListener(listener)
+            plugin.proxy.pluginManager.unregisterListener(this)
+        }
     }
 }
 

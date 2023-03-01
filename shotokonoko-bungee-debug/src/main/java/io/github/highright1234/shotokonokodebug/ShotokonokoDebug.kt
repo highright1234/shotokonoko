@@ -14,8 +14,10 @@ import io.github.highright1234.shotokonoko.pluginmessage.PluginMessageUtil
 import io.github.highright1234.shotokonoko.text
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import net.md_5.bungee.api.event.PostLoginEvent
+import net.md_5.bungee.api.event.ServerSwitchEvent
 
 @Suppress("Unused")
 class ShotokonokoDebug: SuspendingPlugin() {
@@ -50,13 +52,20 @@ class ShotokonokoDebug: SuspendingPlugin() {
                 delay(1000)
             }
         }
-        events<PostLoginEvent>().collect { event ->
-            arrayList += event.player
-
-            PluginMessageUtil.listenOnce(event.player, pluginMessageChannel, null, { true }) {
-                logger.info("user: ${it.name}, data: ${readUTF()}")
+        launch {
+            events<ServerSwitchEvent>().collect { event ->
+                event.player.sendMessage("shdf")
             }
+        }
+        launch {
+            events<PostLoginEvent>().collect { event ->
+                arrayList += event.player
 
+                PluginMessageUtil.listenOnce(event.player, pluginMessageChannel, null, { true }) {
+                    logger.info("user: ${it.name}, data: ${readUTF()}")
+                }
+
+            }
         }
     }
 

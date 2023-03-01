@@ -6,6 +6,7 @@ import io.github.highright1234.shotokonoko.listener.exception.PlayerQuitExceptio
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
 import org.bukkit.entity.Player
 import org.bukkit.event.*
 import org.bukkit.event.entity.EntityDamageByEntityEvent
@@ -16,10 +17,6 @@ import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.EventExecutor
 import java.util.*
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
-import kotlin.reflect.KProperty1
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.jvm.isAccessible
 
 object ListeningUtil {
 
@@ -66,9 +63,12 @@ object ListeningUtil {
         ignoreCancelled: Boolean = false,
         filter: (T) -> Boolean = { true },
     ): Result<T> {
-        return suspendCoroutine { continuation ->
-            listener(player, clazz, priority, ignoreCancelled, filter) {
+        return suspendCancellableCoroutine { continuation ->
+            val listener = listener(player, clazz, priority, ignoreCancelled, filter) {
                 continuation.resume(it)
+            }
+            continuation.invokeOnCancellation {
+                HandlerList.unregisterAll(listener)
             }
         }
     }
@@ -81,10 +81,12 @@ object ListeningUtil {
             // 데미지 받은놈은 위에서 처리함
             if (this is EntityDamageByEntityEvent && this.damager is Player) return this.damager as Player
             if (this is ProjectileHitEvent && this.entity.shooter is Player) return this.entity.shooter as Player
-            @Suppress("UNCHECKED_CAST")
-            val getter = this::class.memberProperties
-                .find { it.name == "player" } as KProperty1<Event, Player>?
-            return getter?.apply { isAccessible = true }?.get(this)
+            val getter = this::class.java.methods
+                .find { it.name == "getPlayer" }
+            val field = this::class.java.declaredFields
+                .find { it.name == "player" }
+
+            return (getter?.invoke(this) ?: field?.apply { isAccessible = true }?.get(this)) as? Player
         }
 
     fun <T: Event> listener(
@@ -119,9 +121,12 @@ object ListeningUtil {
         ignoreCancelled: Boolean = false,
         filter: (T) -> Boolean = { true },
     ): T {
-        return suspendCoroutine { continuation ->
-            listener(clazz, priority, ignoreCancelled, filter) {
+        return suspendCancellableCoroutine { continuation ->
+            val listener = listener(clazz, priority, ignoreCancelled, filter) {
                 continuation.resume(it)
+            }
+            continuation.invokeOnCancellation {
+                HandlerList.unregisterAll(listener)
             }
         }
     }

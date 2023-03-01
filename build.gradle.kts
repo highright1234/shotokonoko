@@ -8,7 +8,7 @@ plugins {
 
 
 group = "io.github.highright1234"
-version = "0.1.6"
+version = "0.1.7"
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
