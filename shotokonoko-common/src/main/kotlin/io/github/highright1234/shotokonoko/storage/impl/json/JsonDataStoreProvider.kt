@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets
 class JsonDataStoreProvider(val folder: File) : DataStoreProvider<JsonDataStore>() {
 
     init {
-        if (!folder.exists()) folder.mkdir()
+        if (!File(folder, "store").exists()) folder.mkdirs()
     }
 
     private val String.sha256 get() = Hashing.sha256().hashString(this, StandardCharsets.UTF_8).toString()

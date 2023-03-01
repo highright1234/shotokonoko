@@ -90,9 +90,10 @@ object PluginMessageUtil {
             unregisterListener(pluginMessageL)
             unregisterListener(listener)
         }
-        val checker: ByteArrayDataInput.(player: ProxiedPlayer) -> Boolean = { sender ->
-            ( if (subChannel != null) subChannel != readUTF() else true ) && player == sender && filter(player)
+        val checker: ByteArrayDataInput.(player: ProxiedPlayer) -> Boolean = { receiver ->
+            player == receiver && filter(player)
         }
+
         pluginMessageL = PluginMessageL(messageChannel, subChannel, checker, runnable)
         registerListener(pluginMessageL)
     }
@@ -108,10 +109,7 @@ object PluginMessageUtil {
             block(it)
             unregisterListener(pluginMessageL)
         }
-        val checker: ByteArrayDataInput.(player: ProxiedPlayer) -> Boolean = {
-            (if (subChannel != null) subChannel != readUTF() else true) && filter(it)
-        }
-        pluginMessageL = PluginMessageL(messageChannel, subChannel, checker, runnable)
+        pluginMessageL = PluginMessageL(messageChannel, subChannel, filter, runnable)
         registerListener(pluginMessageL)
     }
 
@@ -167,6 +165,8 @@ object PluginMessageUtil {
         @EventHandler
         fun PluginMessageEvent.on() {
             if (tag != messageChannel.channel || sender !is Server || receiver !is ProxiedPlayer) return
+            val forFiler = ByteStreams.newDataInput(data).apply { if (subChannel != null) readUTF() }
+            if (!filter(forFiler, receiver as ProxiedPlayer)) return
             @Suppress("UnstableApiUsage")
             val input: ByteArrayDataInput = ByteStreams.newDataInput(data)
             subChannel?.let { subchan ->

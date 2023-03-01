@@ -28,7 +28,7 @@ fun Plugin.loadConfig(name: String): Configuration {
     val file = File(plugin.dataFolder, name)
     val config = provider.load(getResourceAsStream(name))
     if (!file.exists()) {
-        config.save(file)
+        provider.save(config, file)
     }
     return config
 }

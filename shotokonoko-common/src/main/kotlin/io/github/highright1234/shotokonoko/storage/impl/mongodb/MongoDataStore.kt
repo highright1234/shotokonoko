@@ -43,4 +43,6 @@ class MongoDataStore internal constructor(private val provider: MongoDataStorePr
     override fun save() {}
 
     override fun reload() {}
+    override val keys: List<String> get() =
+        collection.find().toList().map { it.get("_id", String::class.java) }
 }

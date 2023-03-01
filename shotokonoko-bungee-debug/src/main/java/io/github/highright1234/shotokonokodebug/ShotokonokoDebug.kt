@@ -39,9 +39,7 @@ class ShotokonokoDebug: SuspendingPlugin() {
         launchPsycho()
 
         pluginMessageChannel.init()
-        PluginMessageUtil.listen(pluginMessageChannel) {
-            logger.info("user: ${it.name}, data: ${readUTF()}")
-        }
+
     }
 
     private fun launchPlayerGCChecker() = launch {
@@ -52,8 +50,13 @@ class ShotokonokoDebug: SuspendingPlugin() {
                 delay(1000)
             }
         }
-        events<PostLoginEvent>().collect {
-            arrayList += it.player
+        events<PostLoginEvent>().collect { event ->
+            arrayList += event.player
+
+            PluginMessageUtil.listenOnce(event.player, pluginMessageChannel, null, { true }) {
+                logger.info("user: ${it.name}, data: ${readUTF()}")
+            }
+
         }
     }
 

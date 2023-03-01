@@ -80,7 +80,7 @@ object PluginMessageUtil {
             HandlerList.unregisterAll(listener)
         }
         val checker: ByteArrayDataInput.(player: Player) -> Boolean = { sender ->
-            ( if (subChannel != null) subChannel != readUTF() else true ) && player == sender && filter(player)
+            player == sender && filter(player)
         }
         pluginMessageL = PluginMessageL(messageChannel, subChannel, checker, runnable)
         messageChannel.registerIncoming(pluginMessageL)
@@ -97,10 +97,8 @@ object PluginMessageUtil {
             block(it)
             plugin.server.messenger.unregisterIncomingPluginChannel(plugin, messageChannel.channel, pluginMessageL)
         }
-        val checker: ByteArrayDataInput.(player: Player) -> Boolean = {
-            (if (subChannel != null) subChannel != readUTF() else true) && filter(it)
-        }
-        pluginMessageL = PluginMessageL(messageChannel, subChannel, checker, runnable)
+
+        pluginMessageL = PluginMessageL(messageChannel, subChannel, filter, runnable)
         messageChannel.registerIncoming(pluginMessageL)
     }
 
@@ -157,7 +155,8 @@ object PluginMessageUtil {
             if (channel != messageChannel.channel) {
                 return
             }
-            if (!filter(ByteStreams.newDataInput(message), player)) return
+            val forFiler = ByteStreams.newDataInput(message).apply { if (subChannel != null) readUTF() }
+            if (!filter(forFiler, player)) return
             val input: ByteArrayDataInput = ByteStreams.newDataInput(message)
             subChannel?.let { subchan ->
                 if (input.readUTF() != subchan) return

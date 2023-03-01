@@ -54,6 +54,7 @@ object ListeningUtil {
         filter: (T) -> Boolean = { true },
         block: (Result<T>) -> Unit,
     ): Listener {
+
         lateinit var listener: Listener
         lateinit var exitListener: Listener
 

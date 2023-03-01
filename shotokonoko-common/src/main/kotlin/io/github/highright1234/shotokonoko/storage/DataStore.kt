@@ -22,6 +22,8 @@ interface DataStore {
 
     fun reload()
 
+    val keys: List<String>
+
 }
 
 inline operator fun <reified T> DataStore.getValue(

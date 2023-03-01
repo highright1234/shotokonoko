@@ -43,4 +43,6 @@ class JsonDataStore internal constructor(private val file: File) : DataStore {
         json = JsonParser.parseString(file.readText()).asJsonObject
     }
 
+    override val keys: List<String> get() = json.keySet().toList()
+
 }

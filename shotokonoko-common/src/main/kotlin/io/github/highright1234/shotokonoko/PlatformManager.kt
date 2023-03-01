@@ -3,6 +3,7 @@ package io.github.highright1234.shotokonoko
 import io.github.highright1234.shotokonoko.storage.Storage
 import io.github.highright1234.shotokonoko.storage.impl.json.JsonDataStoreProvider
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import java.io.File
 import java.util.logging.Logger
@@ -38,6 +39,7 @@ object PlatformManager {
             .first { it.name == "launchAsync" }
             .call(platformManager, block) as Job
     }
+
     val asyncDispatcher: CoroutineContext by Getter
 
     val pluginLoader: Any by Getter

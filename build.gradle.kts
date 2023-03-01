@@ -8,12 +8,13 @@ plugins {
 
 
 group = "io.github.highright1234"
-version = "0.1.5"
+version = "0.1.6"
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     mavenCentral()
+    mavenLocal()
 }
 
 subprojects {
