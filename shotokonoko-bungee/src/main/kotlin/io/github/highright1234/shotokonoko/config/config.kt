@@ -10,25 +10,34 @@ import java.io.File
 private val provider: ConfigurationProvider get() = ConfigurationProvider.getProvider(YamlConfiguration::class.java)
 
 // 버킷이랑 헷갈려서 만든거
-@Suppress("UnusedReceiverParameter")
 fun YamlConfiguration.loadConfiguration(file: File) = provider.load(file)!!
+
+private fun loadConfiguration(file: File) = provider.load(file)!!
 
 fun Configuration.save(file: File) = provider.save(this, file)
 
 fun Plugin.loadConfig(file: File): Configuration {
     val resourceFile: String = file.toString().removePrefix(dataFolder.toString())
-    val config = provider.load(getResourceAsStream(resourceFile))
+
+    lateinit var config: Configuration
     if (!file.exists()) {
+        config = provider.load(getResourceAsStream(resourceFile))
         config.save(file)
+    } else {
+        config = loadConfiguration(file)
     }
+
     return config
 }
 
 fun Plugin.loadConfig(name: String): Configuration {
     val file = File(plugin.dataFolder, name)
-    val config = provider.load(getResourceAsStream(name))
+    lateinit var config: Configuration
     if (!file.exists()) {
+        config = provider.load(getResourceAsStream(name))
         config.save(file)
+    } else {
+        config = loadConfiguration(file)
     }
     return config
 }
