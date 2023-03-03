@@ -16,6 +16,7 @@ private fun loadConfiguration(file: File) = provider.load(file)!!
 
 fun Configuration.save(file: File) = provider.save(this, file)
 
+// parent 폴더로 바꾸기
 fun Plugin.loadConfig(file: File): Configuration {
     if (!plugin.dataFolder.exists()) plugin.dataFolder.mkdirs()
     val resourceFile: String = file.toString().removePrefix(dataFolder.toString())
