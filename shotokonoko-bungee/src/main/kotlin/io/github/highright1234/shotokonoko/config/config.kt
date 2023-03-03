@@ -17,6 +17,7 @@ private fun loadConfiguration(file: File) = provider.load(file)!!
 fun Configuration.save(file: File) = provider.save(this, file)
 
 fun Plugin.loadConfig(file: File): Configuration {
+    if (!plugin.dataFolder.exists()) plugin.dataFolder.mkdirs()
     val resourceFile: String = file.toString().removePrefix(dataFolder.toString())
 
     lateinit var config: Configuration
@@ -31,6 +32,7 @@ fun Plugin.loadConfig(file: File): Configuration {
 }
 
 fun Plugin.loadConfig(name: String): Configuration {
+    if (!plugin.dataFolder.exists()) plugin.dataFolder.mkdirs()
     val file = File(plugin.dataFolder, name)
     lateinit var config: Configuration
     if (!file.exists()) {
