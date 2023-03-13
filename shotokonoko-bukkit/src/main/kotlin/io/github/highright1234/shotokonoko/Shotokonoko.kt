@@ -17,11 +17,16 @@ import org.bukkit.plugin.java.PluginClassLoader
 object Shotokonoko {
 
     private val _plugin: JavaPlugin by lazy {
+
         val loaderField = PluginClassLoader::class.java
             .getDeclaredField("libraryLoader")
             .apply { isAccessible = true }
         val out = Bukkit.getPluginManager().plugins
-            .first { loaderField[it.javaClass.classLoader] == Shotokonoko::class.java.classLoader } as JavaPlugin
+            .first {
+                val classLoader = it.javaClass.classLoader as? PluginClassLoader
+                classLoader ?: return@first false
+                loaderField[classLoader] == Shotokonoko::class.java.classLoader
+            } as JavaPlugin
         init(out)
         out
     }
