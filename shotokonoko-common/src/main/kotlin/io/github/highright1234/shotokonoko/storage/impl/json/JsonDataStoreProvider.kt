@@ -18,7 +18,9 @@ class JsonDataStoreProvider(val folder: File) : DataStoreProvider<JsonDataStore>
             removingDelayData[it]?.timeToRun = System.currentTimeMillis() + delayToRemove
             return it
         }
-        val file = File(folder, "store/${name.sha256}.json")
+        val storeFolder = File(folder, "store")
+        if (!storeFolder.exists()) storeFolder.mkdirs()
+        val file = File(storeFolder, "${name.sha256}.json")
         val store = JsonDataStore(file)
         registerManager(name, store)
         return store

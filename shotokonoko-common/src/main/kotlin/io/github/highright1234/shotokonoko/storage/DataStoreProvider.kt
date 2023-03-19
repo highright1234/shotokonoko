@@ -39,6 +39,7 @@ abstract class DataStoreProvider<T : DataStore> {
         stores -= name
         removingDelayData -= store
         AutoSaver.unregister(store)
+        store.save()
     }
 
     protected fun launchStoreRemover(name: String) {

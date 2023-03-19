@@ -21,6 +21,7 @@ object Shotokonoko {
         AutoSaver.isEnabled = false
 
         Storage.dataStoreProviders.forEach {
+
             it.removeAllStoreCaches()
         }
     }

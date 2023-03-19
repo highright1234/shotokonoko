@@ -3,6 +3,7 @@ package io.github.highright1234.shotokonokodebug
 import com.github.shynixn.mccoroutine.bungeecord.SuspendingPlugin
 import com.github.shynixn.mccoroutine.bungeecord.launch
 import com.outstandingboy.donationalert.entity.Donation
+import io.github.highright1234.shotokonoko.Shotokonoko
 import io.github.highright1234.shotokonoko.collections.newPlayerArrayList
 import io.github.highright1234.shotokonoko.listener.ChatScanner
 import io.github.highright1234.shotokonoko.listener.events
@@ -42,6 +43,10 @@ class ShotokonokoDebug: SuspendingPlugin() {
 
         pluginMessageChannel.init()
 
+    }
+
+    override suspend fun onDisableAsync() {
+        Shotokonoko.disable()
     }
 
     private fun launchPlayerGCChecker() = launch {

@@ -3,7 +3,6 @@ package io.github.highright1234.shotokonoko
 import io.github.highright1234.shotokonoko.storage.Storage
 import io.github.highright1234.shotokonoko.storage.impl.json.JsonDataStoreProvider
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import java.io.File
 import java.util.logging.Logger
@@ -15,7 +14,7 @@ import kotlin.reflect.jvm.isAccessible
 
 internal fun launchAsync(block: suspend CoroutineScope.() -> Unit): Job = PlatformManager.launchAsync(block)
 
-object PlatformManager {
+internal object PlatformManager {
 
     private var isInited = false
 
