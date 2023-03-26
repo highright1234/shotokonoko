@@ -3,12 +3,12 @@ package io.github.highright1234.shotokonoko.collections
 import org.bukkit.entity.Player
 import java.util.*
 
-fun <T> newPlayerHashMapOf(vararg pairs: Pair<Player, T>): MutableMap<Player, T> {
-    return Collections.synchronizedMap(pairs.toMap()) // LinkedHashMap
+inline fun <T> newPlayerHashMapOf(vararg pairs: Pair<Player, T>): MutableMap<Player, T> {
+    return Collections.synchronizedMap(hashMapOf(*pairs))
         .also { PlayerGCProcessor.addTarget(it) }
 }
 
-fun <T> playerHashMapOf(vararg pairs: Pair<Player, T>): MutableMap<Player, T> {
-    return Collections.synchronizedMap(pairs.toMap()) // LinkedHashMap
+inline fun <T> playerHashMapOf(vararg pairs: Pair<Player, T>): MutableMap<Player, T> {
+    return Collections.synchronizedMap(hashMapOf(*pairs))
         .also { PlayerGCProcessor.addTarget(it) }
 }

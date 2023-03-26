@@ -8,7 +8,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
 import java.lang.ref.WeakReference
 
-internal object PlayerGCProcessor {
+object PlayerGCProcessor {
 
     private var isRegistered = false
     private fun register() {

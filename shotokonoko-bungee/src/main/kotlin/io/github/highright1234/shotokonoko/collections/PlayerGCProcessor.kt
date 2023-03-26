@@ -8,7 +8,7 @@ import net.md_5.bungee.event.EventHandler
 import net.md_5.bungee.event.EventPriority
 import java.lang.ref.WeakReference
 
-internal object PlayerGCProcessor {
+object PlayerGCProcessor {
 
     private var isRegistered = false
     private fun register() {
