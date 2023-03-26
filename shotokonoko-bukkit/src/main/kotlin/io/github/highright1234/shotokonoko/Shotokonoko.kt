@@ -17,7 +17,6 @@ import org.bukkit.plugin.java.PluginClassLoader
 object Shotokonoko {
 
     private val _plugin: JavaPlugin by lazy {
-
         val loaderField = PluginClassLoader::class.java
             .getDeclaredField("libraryLoader")
             .apply { isAccessible = true }
