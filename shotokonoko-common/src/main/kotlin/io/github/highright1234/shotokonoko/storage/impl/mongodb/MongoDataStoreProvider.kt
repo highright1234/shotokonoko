@@ -50,7 +50,7 @@ class MongoDataStoreProvider : DataStoreProvider<MongoDataStore>() {
         }
 
         val dataStore = MongoDataStore(this, name)
-        stores.put(name, dataStore)
+        cacheOfStores.put(name, dataStore)
 
         return dataStore
     }

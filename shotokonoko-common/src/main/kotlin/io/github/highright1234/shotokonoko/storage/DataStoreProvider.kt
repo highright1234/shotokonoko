@@ -14,11 +14,11 @@ abstract class DataStoreProvider<T : DataStore> {
     var delayToRemove = 600_000L
 //    protected val stores = hashMapOf<String, T>()
 //    protected val removingDelayData = hashMapOf<T, MutableDelayData>()
-    val stores =
+    val cacheOfStores =
         CacheBuilder.newBuilder()
             .expireAfterAccess(delayToRemove, TimeUnit.MILLISECONDS)
-            .removalListener<String, T> {
-
+            .removalListener<String, T> { removelNotification ->
+                removelNotification.key?.let { removeStoreCache(it) }
             }
             .build<String, T>()
 
@@ -29,19 +29,19 @@ abstract class DataStoreProvider<T : DataStore> {
     }
 
     protected fun registerManager(name: String, dataStore: T) {
-        stores.get(name) { dataStore }
+        cacheOfStores.get(name) { dataStore }
         AutoSaver.register(dataStore)
     }
 
     fun removeAllStoreCaches() {
-        stores.asMap().forEach { (name, _) ->
+        cacheOfStores.asMap().forEach { (name, _) ->
             removeStoreCache(name)
         }
     }
 
     fun removeStoreCache(name: String) {
-        val store = stores.getIfPresent(name) ?: return
-        stores.invalidate(name)
+        val store = cacheOfStores.getIfPresent(name) ?: return
+        cacheOfStores.invalidate(name)
         AutoSaver.unregister(store)
         store.save()
     }
