@@ -50,8 +50,7 @@ class MongoDataStoreProvider : DataStoreProvider<MongoDataStore>() {
         }
 
         val dataStore = MongoDataStore(this, name)
-        stores[name] = dataStore
-        launchStoreRemover(name)
+        stores.put(name, dataStore)
 
         return dataStore
     }

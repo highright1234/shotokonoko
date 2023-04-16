@@ -8,7 +8,7 @@ plugins {
 
 
 group = "io.github.highright1234"
-version = "0.1.9"
+version = "0.1.10"
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
@@ -60,7 +60,7 @@ subprojects {
         compileOnly(kotlin("stdlib-jdk8"))
         compileOnly(kotlin("reflect"))
         if ("bukkit" in project.name) {
-            compileOnly("io.papermc.paper:paper-api:${Versions.MINECRAFT}-R0.1-SNAPSHOT")
+            compileOnly("io.papermc.paper:paper-api:${Versions.SPECIFIED_MINECRAFT}-R0.1-SNAPSHOT")
         } else if ("bungee" in project.name) {
             compileOnly("io.github.waterfallmc:waterfall-api:${Versions.MINECRAFT}-R0.1-SNAPSHOT")
         }

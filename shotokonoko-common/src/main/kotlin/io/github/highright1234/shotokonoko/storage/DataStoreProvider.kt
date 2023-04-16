@@ -1,11 +1,10 @@
 package io.github.highright1234.shotokonoko.storage
 
 
+import com.google.common.cache.CacheBuilder
 import io.github.highright1234.shotokonoko.PlatformManager
-import io.github.highright1234.shotokonoko.coroutine.MutableDelayData
-import io.github.highright1234.shotokonoko.coroutine.mutableDelay
-import io.github.highright1234.shotokonoko.launchAsync
 import kotlinx.coroutines.withContext
+import java.util.concurrent.TimeUnit
 
 suspend fun <T: DataStore> DataStoreProvider<T>.getStoreAsync(name: String): T =
     withContext(PlatformManager.asyncDispatcher) { getStore(name) }
@@ -13,8 +12,15 @@ suspend fun <T: DataStore> DataStoreProvider<T>.getStoreAsync(name: String): T =
 abstract class DataStoreProvider<T : DataStore> {
 
     var delayToRemove = 600_000L
-    protected val stores = hashMapOf<String, T>()
-    protected val removingDelayData = hashMapOf<T, MutableDelayData>()
+//    protected val stores = hashMapOf<String, T>()
+//    protected val removingDelayData = hashMapOf<T, MutableDelayData>()
+    val stores =
+        CacheBuilder.newBuilder()
+            .expireAfterAccess(delayToRemove, TimeUnit.MILLISECONDS)
+            .removalListener<String, T> {
+
+            }
+            .build<String, T>()
 
     abstract fun getStore(name: String): T
 
@@ -23,32 +29,20 @@ abstract class DataStoreProvider<T : DataStore> {
     }
 
     protected fun registerManager(name: String, dataStore: T) {
-        stores.getOrPut(name) { dataStore }
-        launchStoreRemover(name)
+        stores.get(name) { dataStore }
         AutoSaver.register(dataStore)
     }
 
     fun removeAllStoreCaches() {
-        stores.forEach { (name, _) ->
+        stores.asMap().forEach { (name, _) ->
             removeStoreCache(name)
         }
     }
 
     fun removeStoreCache(name: String) {
-        val store = stores[name] ?: return
-        stores -= name
-        removingDelayData -= store
+        val store = stores.getIfPresent(name) ?: return
+        stores.invalidate(name)
         AutoSaver.unregister(store)
         store.save()
-    }
-
-    protected fun launchStoreRemover(name: String) {
-        val store = stores[name] ?: return
-        val mutableDelayData = mutableDelay(delayToRemove)
-        removingDelayData[store] = mutableDelayData
-        launchAsync {
-            mutableDelayData.block()
-            removeStoreCache(name)
-        }
     }
 }
