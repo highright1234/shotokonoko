@@ -14,6 +14,7 @@ class JsonDataStoreProvider(val folder: File) : DataStoreProvider<JsonDataStore>
     private val String.sha256 get() = Hashing.sha256().hashString(this, StandardCharsets.UTF_8).toString()
 
     override fun getStore(name: String): JsonDataStore {
+        cacheOfStores.getIfPresent(name)?.let { return it }
         val storeFolder = File(folder, "store")
         if (!storeFolder.exists()) storeFolder.mkdirs()
         val file = File(storeFolder, "${name.sha256}.json")
